@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.0.1 - 2026-11-14
+
+### Fixes
+
+- Judge a privacy relay by relay alone, even on a hosting network ([`b6cdcc5`](https://github.com/internetdata/minecraft-plugin/commit/b6cdcc57d04f59aa3d2b38bc632b45217a138472))
+
 ## 1.0.0 - 2026-11-14
 
 ### Features
