@@ -20,6 +20,8 @@ final class Answers {
             + "\"currency_symbol\":\"\",\"flag_emoji\":\"\",\"flag_unicode\":\"\"}";
     static final String ASN_M247 = "{\"asn\":9009,\"name\":\"M247 Europe SRL\",\"domain\":\"m247global.com\","
             + "\"type\":\"hosting\",\"prefix\":\"146.70.116.0/24\"}";
+    static final String ASN_CLOUDFLARE = "{\"asn\":13335,\"name\":\"Cloudflare, Inc.\",\"domain\":\"cloudflare.com\","
+            + "\"type\":\"hosting\",\"prefix\":\"104.28.0.0/16\"}";
     static final String ASN_ISP = "{\"asn\":28573,\"name\":\"Claro NXT\",\"domain\":\"claro.com.br\","
             + "\"type\":\"isp\",\"prefix\":\"177.0.0.0/14\"}";
     static final String ASN_STARLINK = "{\"asn\":14593,\"name\":\"SpaceX Services, Inc.\",\"domain\":\"spacex.com\","
@@ -73,6 +75,21 @@ final class Answers {
                 + "\"location\":" + LOCATION_AT + ",\"asn\":" + ASN_M247 + ","
                 + "\"company\":{\"name\":\"M247 LTD Vienna Infrastructure\",\"domain\":\"m247.ro\",\"type\":\"hosting\","
                 + "\"country\":\"AT\"},\"hostname\":\"\",\"abuse\":{\"email\":\"abuse@m247.ro\"}}";
+    }
+
+    /** A paid plan: an iCloud Private Relay exit on Cloudflare, which answers is_hosting as well as is_relay. */
+    static String paidRelay(String ip) {
+        return "{\"ip\":\"" + ip + "\",\"is_bogon\":false,\"is_vpn\":false,\"is_tor\":false,\"is_relay\":true,"
+                + "\"is_resproxy\":false,\"is_dcproxy\":false,\"is_mobproxy\":false,\"is_pubproxy\":false,"
+                + "\"is_hosting\":true,\"is_cdn\":false,\"is_anycast\":false,\"is_carrier\":false,\"is_satellite\":false,"
+                + "\"is_ssh\":false,\"is_smtp\":false,\"is_web\":false,\"is_dns_resolver\":false,\"is_bittorrent\":false,"
+                + "\"vpn\":{},\"tor\":{},\"relay\":" + RELAY + ",\"resproxy\":{},\"dcproxy\":{},\"mobproxy\":{},"
+                + "\"pubproxy\":{},\"hosting\":{\"provider\":\"cloudflare\",\"provider_name\":\"Cloudflare\","
+                + "\"confidence\":\"high\",\"last_seen\":\"2026-11-13\"},\"cdn\":{},\"carrier\":{},\"satellite\":{},"
+                + "\"ssh\":{},\"smtp\":{},\"web\":[],\"dns_resolver\":{},\"bittorrent\":{},"
+                + "\"location\":" + LOCATION_AT + ",\"asn\":" + ASN_CLOUDFLARE + ","
+                + "\"company\":{\"name\":\"Cloudflare, Inc.\",\"domain\":\"cloudflare.com\",\"type\":\"hosting\","
+                + "\"country\":\"US\"},\"hostname\":\"\",\"abuse\":{\"email\":\"abuse@cloudflare.com\"}}";
     }
 
     /**

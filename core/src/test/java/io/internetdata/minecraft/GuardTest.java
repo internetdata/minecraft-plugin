@@ -89,6 +89,27 @@ class GuardTest {
     }
 
     @Test
+    void theShippedDefaultsAlertARelayOnAHostingNetworkRatherThanRefuseIt() throws Exception {
+        String ip = "104.28.60.1";
+        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_AT, Answers.ASN_CLOUDFLARE, "relay"));
+        Verdict verdict = check(guard("", ""), ip);
+        assertEquals(Action.ALERT, verdict.action());
+        assertEquals(List.of("privacy relay (iCloud Private Relay)"), verdict.reasons());
+    }
+
+    @Test
+    void aRelayThatAlsoAnswersHostingIsJudgedAsARelayAlone() throws Exception {
+        String ip = "104.28.60.1";
+        api.answer("/" + ip, Answers.paidRelay(ip));
+        assertEquals(Action.ALLOW,
+                check(guard("api-key: \"id_test_0123456789abcdef\"\nchecks: {hosting: block, relay: allow}", ""), ip)
+                        .action());
+        Verdict verdict = check(guard("api-key: \"id_test_0123456789abcdef\"\nchecks: {hosting: alert, relay: block}", ""), ip);
+        assertEquals(Action.BLOCK, verdict.action());
+        assertEquals(List.of("privacy relay (iCloud Private Relay)"), verdict.reasons());
+    }
+
+    @Test
     void theFreeAnswersOwnFlagsAlertStaffByDefault() throws Exception {
         String ip = "98.97.1.2";
         api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "relay", "carrier",

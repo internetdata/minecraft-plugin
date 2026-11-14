@@ -36,7 +36,7 @@ It runs on Java 17 or newer: Paper, Spigot, Purpur, Folia and other Bukkit serve
 | `satellite` | Satellite internet, like Starlink | nothing | `alert` |
 | `anycast` | Anycast addresses, which many places announce at once | nothing | `alert` |
 
-Without a paid plan, `hosting` goes by the kind of network announcing the address; a paid plan answers it for each address and names the VPN, hosting or proxy provider in your messages. A check your plan doesn't answer is skipped, and the console says so once. The [pricing page](https://internetdata.io/pricing) says what each plan answers.
+Without a paid plan, `hosting` goes by the kind of network announcing the address; a paid plan answers it for each address and names the VPN, hosting or proxy provider in your messages. A privacy relay is judged by `relay` alone, even where it runs on a hosting network, so iCloud Private Relay and WARP users are flagged to staff rather than refused. A check your plan doesn't answer is skipped, and the console says so once. The [pricing page](https://internetdata.io/pricing) says what each plan answers.
 
 Countries need no key. List the two-letter codes to refuse in `countries.block`, or the only ones to let in in `countries.allow`:
 

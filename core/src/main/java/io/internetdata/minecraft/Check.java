@@ -47,7 +47,9 @@ public enum Check {
     HOSTING {
         // Without a key the answer carries no hosting flag, but does say what kind of network
         // announces the address, which tells a datacenter from an ISP well enough to keep bots out.
-        // The flag, which a paid answer carries, is per address and wins.
+        // The flag, which a paid answer carries, is per address and wins. A privacy relay is judged by
+        // the relay check alone: iCloud Private Relay, WARP and the company gateways run on hosting
+        // networks, and most of their addresses answer is_hosting too.
         @Override
         boolean served(Result result) {
             return true;
@@ -55,6 +57,9 @@ public enum Check {
 
         @Override
         Optional<String> match(Result result) {
+            if (result.isRelay()) {
+                return Optional.empty();
+            }
             if (result.isHosting().isPresent()) {
                 if (!result.isHosting().get()) {
                     return Optional.empty();
