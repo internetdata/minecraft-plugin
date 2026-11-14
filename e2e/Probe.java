@@ -28,7 +28,9 @@ import java.util.zip.Inflater;
  * where the protocol asks for it, so a proxy goes on to send the player to a server behind it.
  * watch stays as a player for up to that many seconds, on 1.20.1 and older, where the login ends in
  * play, and prints SAW once one packet holds every word, as a chat line staff are sent does, or
- * MISSED. uuid prints the UUID an offline-mode server gives a name, for ops.json.
+ * MISSED. uuid prints the UUID an offline-mode server gives a name, for ops.json. PROBE_PROTOCOL
+ * logs in with that protocol rather than the one the status ping offers, for a proxy whose servers
+ * behind it speak an older one (763 for 1.20.1).
  */
 public final class Probe {
     private static final Pattern PROTOCOL = Pattern.compile("\"protocol\"\\s*:\\s*(-?\\d+)");
@@ -46,7 +48,8 @@ public final class Probe {
         List<String> words = args.length > 6 ? List.of(args).subList(5, args.length - 1) : List.of();
         int seconds = args.length > 6 ? Integer.parseInt(args[args.length - 1]) : 15;
         try {
-            int protocol = protocol(host, port);
+            String forced = System.getenv("PROBE_PROTOCOL");
+            int protocol = forced != null ? Integer.parseInt(forced) : protocol(host, port);
             System.out.println(login(host, port, name, source, protocol, mode, words, seconds));
         } catch (IOException e) {
             System.out.println("ERROR " + e);
