@@ -1,0 +1,10 @@
+{
+  "id": "internetdata",
+  "name": "InternetData",
+  "version": "${project.version}",
+  "description": "Refuses or flags players by country and network, and sends each to their region's server.",
+  "url": "https://internetdata.io",
+  "authors": ["InternetData"],
+  "dependencies": [],
+  "main": "io.internetdata.minecraft.velocity.InternetDataVelocity"
+}

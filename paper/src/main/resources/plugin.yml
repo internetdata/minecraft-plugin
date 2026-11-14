@@ -1,0 +1,20 @@
+name: InternetData
+version: '${project.version}'
+main: io.internetdata.minecraft.paper.InternetDataPaper
+api-version: '1.13'
+folia-supported: true
+description: Refuses or flags players by country and network, and checks VPNs and proxies with a key.
+author: InternetData
+website: https://internetdata.io
+commands:
+  internetdata:
+    description: Look up a player, sign in, and edit the bypass list.
+    aliases: [inetd]
+    usage: /inetd help
+permissions:
+  internetdata.admin:
+    description: Run every /inetd command.
+    default: op
+  internetdata.alerts:
+    description: Be told in chat about refused and flagged logins.
+    default: op

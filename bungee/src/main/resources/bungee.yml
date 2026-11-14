@@ -1,0 +1,6 @@
+name: InternetData
+version: '${project.version}'
+main: io.internetdata.minecraft.bungee.InternetDataBungee
+description: Refuses or flags players by country and network, and sends each to their region's server.
+author: InternetData
+website: https://internetdata.io

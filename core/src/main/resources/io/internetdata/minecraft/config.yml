@@ -1,0 +1,92 @@
+# InternetData checks each player's address as they join: it refuses or flags the ones from the
+# countries and networks you choose, and on a Velocity or BungeeCord proxy sends each to the server
+# you set for where they are. Run /inetd reload after editing this file.
+# Guide: https://docs.internetdata.io/integrations/minecraft
+
+# Your API key. Run /inetd login to sign in and have it filled in for you, or paste one from
+# https://app.internetdata.io. Without a key, countries, routing and every check below but vpn and
+# proxy work, and hosting goes by the network an address belongs to. Signed in, a server tries every
+# check, 100 lookups a day, and a paid plan answers them all on every login.
+api-key: ""
+
+# What happens when a joining player's address is one of these:
+#   block   refuse the login with the kick message below
+#   alert   let them in, and tell staff who hold internetdata.alerts
+#   allow   do nothing
+checks:
+  # Commercial VPN servers. Needs a paid plan, or a signed-in server's first 100 lookups a day.
+  vpn: block
+  # Tor relays.
+  tor: block
+  # Datacenters and cloud providers, where bots and self-hosted VPNs run. Without a paid plan, judged
+  # by the network an address belongs to; with one, address by address.
+  hosting: block
+  # Residential, datacenter, mobile and public proxies. Needs a paid plan, or a signed-in server's
+  # first 100 lookups a day.
+  proxy: block
+  # Privacy relays and company web gateways, like iCloud Private Relay.
+  relay: alert
+  # Mobile networks, whose addresses many players share and swap, so a ban on one misses.
+  carrier: alert
+  # Satellite internet, like Starlink, whose addresses are shared too.
+  satellite: alert
+  # Anycast addresses, which many places announce at once, so no one player's home is behind one.
+  anycast: alert
+
+# Countries by two-letter code, like US, DE or BR.
+countries:
+  # Refuse players from these countries.
+  block: []
+  # Refuse players from every country but these. Leave it empty to let in every country.
+  allow: []
+
+# On a Velocity or BungeeCord proxy, the server each player is sent to first, by where they connect
+# from: their country's entry, else their continent's. Continents are AF, AN, AS, EU, NA, OC and SA,
+# and each server is a name from the proxy's own config. Anyone neither names, whose address can't be
+# placed, or who is in bypass.txt goes where the proxy sends everyone.
+routing:
+  continents: {}
+  countries: {}
+#  continents:
+#    EU: lobby-eu
+#    NA: lobby-na
+#    AS: lobby-asia
+#  countries:
+#    BR: lobby-br
+
+# Rules on any field of the answer, for what the checks above don't cover. A rule's match is written
+# in the shape of the answer, and holds when every field it names does: a list means any of them,
+# and {gte: 5} compares a number. Each rule blocks or alerts, and its reason shows in the messages.
+# The fields are listed in the guide.
+rules: []
+#  - action: block
+#    reason: M247
+#    match:
+#      asn:
+#        asn: 9009
+#  - action: alert
+#    reason: an SSH server
+#    match:
+#      is_ssh: true
+
+# Players and addresses that are never checked live in bypass.txt, beside this file.
+# /inetd bypass add <player|address|range> adds one.
+
+messages:
+  # Shown to a player refused by a check or a rule. {reason} says what matched, like "Tor".
+  kick: "&cYou can't join from this connection: {reason}.\n&7Turn off your VPN or proxy and join again."
+  # Shown to a player refused by country.
+  kick-country: "&cThis server doesn't accept players from your country."
+  # Shown when a lookup failed and fail-closed is true.
+  failed: "&cWe couldn't check your connection.\n&7Try again in a minute."
+  # Sent to staff who hold internetdata.alerts, and logged. {country} is the player's, like BR.
+  # Leave one empty to turn it off.
+  alert: "&8[&3InternetData&8] &f{player} &7joined from &f{ip} &7({country}): &e{reason}"
+  blocked: "&8[&3InternetData&8] &7Refused &f{player} &7from &f{ip} &7({country}): &c{reason}"
+
+# When a lookup fails, because our API can't be reached or your allowance is spent: false lets the
+# player in, so an outage of ours never locks out your players; true refuses them.
+fail-closed: false
+
+# How long an address's answer is reused before it's looked up again, in minutes.
+cache-minutes: 60

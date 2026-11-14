@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.internetdata</groupId>
+        <artifactId>internetdata-minecraft</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>internetdata-minecraft-dist</artifactId>
+    <name>InternetData for Minecraft: the plugin jar</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.internetdata</groupId>
+            <artifactId>internetdata-minecraft-paper</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.internetdata</groupId>
+            <artifactId>internetdata-minecraft-velocity</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.internetdata</groupId>
+            <artifactId>internetdata-minecraft-bungee</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>InternetData-${project.version}</finalName>
+        <plugins>
+            <!-- The shaded jar replaces this module's own, empty one under the same name. Left to
+                 itself the jar plugin keeps a jar that exists, so a build without clean would shade
+                 the last build's shaded jar, whose classes win over the modules' new ones. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <forceCreation>true</forceCreation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <!-- The annotation jars hold nothing a running server reads. -->
+                                <excludes>
+                                    <exclude>org.jspecify:*</exclude>
+                                    <exclude>com.google.errorprone:*</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <!-- Every plugin on a Bukkit server shares one class namespace, so a library
+                                 left at its own package can meet another plugin's copy of a different
+                                 version. Moved under ours, it never does. -->
+                            <relocations>
+                                <relocation>
+                                    <pattern>io.internetdata</pattern>
+                                    <shadedPattern>io.internetdata.minecraft.lib.sdk</shadedPattern>
+                                    <excludes>
+                                        <exclude>io.internetdata.minecraft.**</exclude>
+                                    </excludes>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.fasterxml.jackson</pattern>
+                                    <shadedPattern>io.internetdata.minecraft.lib.jackson</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.github.benmanes.caffeine</pattern>
+                                    <shadedPattern>io.internetdata.minecraft.lib.caffeine</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.yaml.snakeyaml</pattern>
+                                    <shadedPattern>io.internetdata.minecraft.lib.snakeyaml</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/**</exclude>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+                                    <addHeader>false</addHeader>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Implementation-Title>InternetData</Implementation-Title>
+                                        <Implementation-Version>${project.version}</Implementation-Version>
+                                        <!-- Calls nothing but the API, so Paper has no reason to remap the
+                                             jar on first start. -->
+                                        <paperweight-mappings-namespace>mojang</paperweight-mappings-namespace>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

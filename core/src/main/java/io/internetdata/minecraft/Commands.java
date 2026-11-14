@@ -1,0 +1,361 @@
+package io.internetdata.minecraft;
+
+import io.internetdata.InternetDataException;
+import io.internetdata.Result;
+import io.internetdata.model.Asn;
+import io.internetdata.model.CarrierDetail;
+import io.internetdata.model.Entitlement;
+import io.internetdata.model.Location;
+import io.internetdata.model.ProxyDetail;
+import io.internetdata.model.SatelliteDetail;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Stream;
+
+/**
+ * /internetdata, or /inetd: the same subcommands on every platform. Anything that waits on the network
+ * runs on the engine's threads and answers through {@link Sender}, which any thread may use.
+ */
+public final class Commands {
+    private static final List<String> SUBCOMMANDS =
+            List.of("check", "login", "status", "bypass", "reload", "help");
+    private static final int LIST_LIMIT = 50;
+
+    private final Engine engine;
+
+    Commands(Engine engine) {
+        this.engine = engine;
+    }
+
+    public void execute(Sender sender, String[] args) {
+        if (!sender.hasPermission(Engine.ADMIN)) {
+            say(sender, "&cYou need the " + Engine.ADMIN + " permission for that.");
+            return;
+        }
+        String sub = args.length == 0 ? "help" : args[0].toLowerCase(Locale.ROOT);
+        switch (sub) {
+            case "check" -> check(sender, args);
+            case "login" -> engine.signIn().start(sender, engine::saveApiKey);
+            case "status" -> status(sender);
+            case "bypass" -> bypass(sender, args);
+            case "reload" -> reload(sender);
+            default -> help(sender);
+        }
+    }
+
+    public List<String> complete(Sender sender, String[] args) {
+        if (!sender.hasPermission(Engine.ADMIN) || args.length == 0) {
+            return List.of();
+        }
+        if (args.length == 1) {
+            return matching(SUBCOMMANDS.stream(), args[0]);
+        }
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        if (sub.equals("check") && args.length == 2) {
+            return matching(engine.platform().playerNames().stream(), args[1]);
+        }
+        if (sub.equals("bypass")) {
+            if (args.length == 2) {
+                return matching(Stream.of("add", "remove", "list"), args[1]);
+            }
+            if (args.length == 3 && args[1].equalsIgnoreCase("add")) {
+                return matching(engine.platform().playerNames().stream(), args[2]);
+            }
+            if (args.length == 3 && args[1].equalsIgnoreCase("remove")) {
+                return matching(engine.state().bypass().entries().stream().map(Bypass.Entry::text), args[2]);
+            }
+        }
+        return List.of();
+    }
+
+    private void help(Sender sender) {
+        say(sender, "&3InternetData " + engine.version() + " &7commands:");
+        say(sender, "&f/inetd check <player|address> &7look one up, and say what a login would get");
+        say(sender, "&f/inetd login &7sign in, and save an API key in config.yml");
+        say(sender, "&f/inetd status &7your plan, and what's been checked since the server started");
+        say(sender, "&f/inetd bypass add|remove|list [player|address|range] &7never check these");
+        say(sender, "&f/inetd reload &7read config.yml and bypass.txt again");
+    }
+
+    private void check(Sender sender, String[] args) {
+        if (args.length != 2) {
+            say(sender, "&cUsage: /inetd check <player|address>");
+            return;
+        }
+        String target = args[1];
+        Optional<Platform.OnlinePlayer> player = engine.platform().player(target);
+        InetAddress address = player.map(Platform.OnlinePlayer::address).orElseGet(() -> Range.literal(target));
+        if (address == null) {
+            say(sender, "&cNo online player or address is called " + target + ".");
+            return;
+        }
+        String name = player.map(Platform.OnlinePlayer::name).orElse(null);
+        UUID uuid = player.map(Platform.OnlinePlayer::uuid).orElse(null);
+        engine.executor().execute(() -> {
+            Engine.State state = engine.state();
+            Result result;
+            try {
+                result = engine.lookup(address);
+            } catch (InternetDataException e) {
+                say(sender, "&cThe lookup failed: " + e.getMessage());
+                return;
+            }
+            say(sender, "&3InternetData &7on &f" + address.getHostAddress()
+                    + (name == null ? "" : " &7(" + name + ")"));
+            if (result.isBogon()) {
+                say(sender, "&7A private address: nothing is looked up for it, and it's always let in.");
+                return;
+            }
+            say(sender, anonymity(result));
+            say(sender, network(result));
+            say(sender, where(result));
+            boolean exempt = state.bypass().covers(name, uuid, address);
+            Verdict verdict = state.guard().judge(result);
+            say(sender, "&7A login gets: " + outcome(verdict, exempt));
+            if (state.settings().routes() && engine.platform().servers().isPresent() && !exempt
+                    && !verdict.isBlocked()) {
+                say(sender, "&7It's sent to: &f" + state.settings().destination(result.location())
+                        .orElse("the proxy's own choice, as routing names neither its country nor continent"));
+            }
+        });
+    }
+
+    private void status(Sender sender) {
+        Engine.State state = engine.state();
+        say(sender, "&3InternetData " + engine.version() + " &7on " + engine.platform().server());
+        say(sender, "&7Checks: &f" + Engine.describe(state.settings()));
+        say(sender, "&7Since the server started: &f" + engine.checked.get() + " &7logins checked, &f"
+                + engine.refused.get() + " &7refused, &f" + engine.flagged.get() + " &7flagged, &f"
+                + engine.bypassed.get() + " &7bypassed, &f" + engine.failed.get() + " &7lookups failed"
+                + (state.settings().routes() ? ", &f" + engine.routed.get() + " &7routed." : "."));
+        if (state.apiKey() == null) {
+            say(sender, "&7No API key, so VPNs and proxies aren't checked. Run &f/inetd login &7to sign in.");
+            return;
+        }
+        engine.executor().execute(() -> {
+            try {
+                say(sender, "&7Key &f" + Login.mask(state.apiKey()) + " &7from " + state.keySource()
+                        + ": &f" + usage(engine.entitlement()));
+            } catch (InternetDataException e) {
+                say(sender, "&cCouldn't read the key's plan: " + e.getMessage());
+            }
+        });
+    }
+
+    private void bypass(Sender sender, String[] args) {
+        String action = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "list";
+        Bypass bypass = engine.state().bypass();
+        if (action.equals("list")) {
+            List<Bypass.Entry> entries = bypass.entries();
+            if (entries.isEmpty()) {
+                say(sender, "&7bypass.txt is empty.");
+                return;
+            }
+            say(sender, "&7Never checked (" + entries.size() + "):");
+            entries.stream().limit(LIST_LIMIT).forEach(e -> say(sender, "&f" + e.text()));
+            if (entries.size() > LIST_LIMIT) {
+                say(sender, "&7... and " + (entries.size() - LIST_LIMIT) + " more, in bypass.txt.");
+            }
+            return;
+        }
+        if (args.length != 3 || !(action.equals("add") || action.equals("remove"))) {
+            say(sender, "&cUsage: /inetd bypass add|remove <player|uuid|address|range>, or /inetd bypass list");
+            return;
+        }
+        // An online player is added by UUID, which survives a change of name, with the name beside it.
+        Optional<Platform.OnlinePlayer> player = engine.platform().player(args[2]);
+        List<Bypass.Entry> entries = new ArrayList<>();
+        player.ifPresent(p -> entries.add(Bypass.parse(p.uuid().toString())));
+        if (player.isEmpty() || action.equals("remove")) {
+            Bypass.Entry entry = Bypass.parse(args[2]);
+            if (entry == null) {
+                say(sender, "&c" + args[2] + " is not a player name, UUID, address or range.");
+                return;
+            }
+            entries.add(entry);
+        }
+        try {
+            boolean changed = false;
+            for (Bypass.Entry entry : entries) {
+                if (action.equals("add")) {
+                    String comment = player.map(p -> p.name() + ", ").orElse("")
+                            + "added " + LocalDate.now(ZoneOffset.UTC);
+                    changed |= bypass.add(entry, comment);
+                } else {
+                    changed |= bypass.remove(entry);
+                }
+            }
+            String what = player.map(Platform.OnlinePlayer::name).orElse(entries.get(0).text());
+            if (action.equals("add")) {
+                say(sender, changed ? "&a" + what + " is never checked now."
+                        : "&7" + what + " was in bypass.txt already.");
+            } else {
+                say(sender, changed ? "&a" + what + " is checked again."
+                        : "&7" + what + " wasn't in bypass.txt.");
+            }
+        } catch (IOException e) {
+            say(sender, "&cCouldn't write bypass.txt: " + e.getMessage());
+        }
+    }
+
+    private void reload(Sender sender) {
+        List<String> problems = engine.reload();
+        say(sender, "&aRead config.yml and bypass.txt again. &7Checks: &f"
+                + Engine.describe(engine.state().settings()));
+        for (String problem : problems) {
+            say(sender, "&e" + problem);
+        }
+    }
+
+    /** The plan an organization with no subscription is on, which the site and console call Unlimited. */
+    static final String FREE_PLAN = "free";
+
+    /**
+     * A plan and what is left of it, like "Starter plan, 1,234 of 250,000 lookups used, renewing 2026-12-01".
+     * The free plan, Unlimited, answers every lookup with no cap and the first ones each UTC day with every
+     * field, which is what its usage counts, so it reads "Unlimited plan, 45 of 100 lookups with every field
+     * used today".
+     */
+    static String usage(Entitlement entitlement) {
+        String key = entitlement.getPlan() == null ? null : entitlement.getPlan().getKey();
+        if (FREE_PLAN.equals(key) && entitlement.getUsage() != null
+                && entitlement.getUsage().getRequests() != null && entitlement.getUsage().getQuota() != null) {
+            return String.format(Locale.ROOT, "Unlimited plan, %,d of %,d lookups with every field used today",
+                    entitlement.getUsage().getRequests(), entitlement.getUsage().getQuota());
+        }
+        String plan = key == null ? "your" : capitalize(key);
+        StringBuilder out = new StringBuilder(plan + " plan");
+        if (entitlement.getUsage() != null) {
+            Long requests = entitlement.getUsage().getRequests();
+            Long quota = entitlement.getUsage().getQuota();
+            if (requests != null && quota != null && quota > 0) {
+                out.append(String.format(Locale.ROOT, ", %,d of %,d lookups used", requests, quota));
+            } else if (requests != null) {
+                out.append(String.format(Locale.ROOT, ", %,d lookups used", requests));
+            }
+            if (entitlement.getUsage().getWindowEnd() != null) {
+                out.append(", renewing ").append(entitlement.getUsage().getWindowEnd().toLocalDate());
+            }
+        }
+        return out.toString();
+    }
+
+    private static String anonymity(Result r) {
+        List<String> parts = new ArrayList<>();
+        parts.add(field("VPN", r.isVpn(), r.vpn().map(d -> provider(d.getProviderName(), d.getProvider()))));
+        parts.add(field("Tor", Optional.of(r.isTor()), Optional.empty()));
+        parts.add(field("hosting", r.isHosting(),
+                r.hosting().map(d -> provider(d.getProviderName(), d.getProvider()))));
+        parts.add("&7proxy " + proxies(r));
+        parts.add(field("relay", Optional.of(r.isRelay()),
+                Optional.ofNullable(r.relay()).map(d -> provider(d.getProviderName(), d.getProvider()))));
+        return String.join("&7, ", parts);
+    }
+
+    private static String network(Result r) {
+        String asName = r.asn() == null ? null : r.asn().getName();
+        return String.join("&7, ", List.of(
+                field("Carrier", Optional.of(r.isCarrier()),
+                        r.carrier().map(CarrierDetail::getName).filter(n -> !n.isBlank())
+                                .or(() -> Optional.ofNullable(asName))),
+                field("satellite", Optional.of(r.isSatellite()),
+                        r.satellite().map(Commands::provider).filter(n -> !n.isBlank())
+                                .or(() -> Optional.ofNullable(asName))),
+                field("anycast", Optional.of(r.isAnycast()), Optional.empty())));
+    }
+
+    private static String field(String label, Optional<Boolean> flag, Optional<String> provider) {
+        if (flag.isEmpty()) {
+            return "&7" + label + " &8not in your plan";
+        }
+        if (!flag.get()) {
+            return "&7" + label + " &fno";
+        }
+        return "&7" + label + " &cyes" + provider.filter(p -> !p.isBlank()).map(p -> " (" + p + ")").orElse("");
+    }
+
+    private static String proxies(Result r) {
+        if (!Check.PROXY.served(r)) {
+            return "&8not in your plan";
+        }
+        List<String> kinds = new ArrayList<>();
+        proxy(kinds, "residential", r.isResproxy(), r.resproxy().map(Commands::provider));
+        proxy(kinds, "datacenter", r.isDcproxy(), r.dcproxy().map(Commands::provider));
+        proxy(kinds, "mobile", r.isMobproxy(), r.mobproxy().map(Commands::provider));
+        proxy(kinds, "public", r.isPubproxy(), Optional.empty());
+        return kinds.isEmpty() ? "&fno" : "&c" + String.join(", ", kinds);
+    }
+
+    private static void proxy(List<String> kinds, String kind, Optional<Boolean> flag,
+            Optional<String> provider) {
+        if (flag.orElse(false)) {
+            kinds.add(kind + provider.filter(p -> !p.isBlank()).map(p -> " (" + p + ")").orElse(""));
+        }
+    }
+
+    private static String where(Result r) {
+        Location l = r.location();
+        String place = l == null || Settings.code(l.getCountry()).isEmpty() ? "unknown" : country(l);
+        String network = r.asn() == null ? "unknown" : network(r.asn());
+        return "&7Country &f" + place + "&7, network &f" + network;
+    }
+
+    private static String country(Location l) {
+        String name = l.getCountryName() == null || l.getCountryName().isEmpty() ? "" : l.getCountryName() + " ";
+        String continent = l.getContinentName() == null || l.getContinentName().isEmpty() ? ""
+                : " &7in &f" + l.getContinentName();
+        return name + "(" + l.getCountry() + ")" + continent;
+    }
+
+    private static String network(Asn asn) {
+        if (asn.getAsn() == null || asn.getAsn() == 0) {
+            return "none announces it";
+        }
+        String type = asn.getType() == null || asn.getType().isEmpty() ? "" : " (" + asn.getType() + ")";
+        return "AS" + asn.getAsn() + " " + (asn.getName() == null ? "" : asn.getName()) + type;
+    }
+
+    private static String outcome(Verdict verdict, boolean exempt) {
+        if (exempt) {
+            return "&alet in, as bypass.txt lists it";
+        }
+        return switch (verdict.action()) {
+            case BLOCK -> "&crefused&7, for " + verdict.reason();
+            case ALERT -> "&elet in, and staff alerted&7, for " + verdict.reason();
+            case ALLOW -> "&alet in";
+        };
+    }
+
+    private static String provider(ProxyDetail d) {
+        return provider(d.getProviderName(), d.getProvider());
+    }
+
+    private static String provider(SatelliteDetail d) {
+        return provider(d.getProviderName(), d.getProvider());
+    }
+
+    private static String provider(String name, String id) {
+        return name != null && !name.isBlank() ? name : id;
+    }
+
+    private static String capitalize(String word) {
+        return word.isEmpty() ? word : Character.toUpperCase(word.charAt(0)) + word.substring(1);
+    }
+
+    private static void say(Sender sender, String text) {
+        sender.send(Text.colorize(text));
+    }
+
+    private static List<String> matching(Stream<String> options, String prefix) {
+        String lower = prefix.toLowerCase(Locale.ROOT);
+        return options.filter(o -> o.toLowerCase(Locale.ROOT).startsWith(lower)).sorted().toList();
+    }
+}
