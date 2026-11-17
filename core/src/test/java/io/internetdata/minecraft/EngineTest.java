@@ -23,12 +23,12 @@ class EngineTest {
     private static final String TOR_IP = "45.83.91.1";
     private static final String ENTITLEMENT = "{\"org_id\":\"f32191d0-ef02-450e-a505-eb5814c35cab\","
             + "\"apikey\":{\"id\":\"10c2b437-3aa2-4a63-bd17-8e7c8c7f0def\",\"expires\":null,\"allowed_cidrs\":[]},"
-            + "\"plan\":{\"key\":\"starter\",\"tier\":\"starter\"},\"usage\":{\"requests\":545,\"quota\":250000,"
+            + "\"plan\":{\"key\":\"starter\",\"tier\":\"starter\",\"name\":\"Starter\"},\"usage\":{\"requests\":545,\"quota\":250000,"
             + "\"hard_limit\":null,\"window_start\":\"2026-11-01T00:00:00Z\",\"window_end\":\"2026-12-01T00:00:00Z\"}}";
     // An organization on the free plan, Unlimited: its usage counts the UTC day's lookups with every field.
     private static final String FREE_PLAN_ENTITLEMENT = "{\"org_id\":\"f32191d0-ef02-450e-a505-eb5814c35cab\","
             + "\"apikey\":{\"id\":\"10c2b437-3aa2-4a63-bd17-8e7c8c7f0def\",\"expires\":null,\"allowed_cidrs\":[]},"
-            + "\"plan\":{\"key\":\"free\",\"tier\":\"free\"},\"usage\":{\"requests\":45,\"quota\":100,"
+            + "\"plan\":{\"key\":\"free\",\"tier\":\"free\",\"name\":\"Unlimited\"},\"usage\":{\"requests\":45,\"quota\":100,"
             + "\"hard_limit\":null,\"window_start\":\"2026-11-14T00:00:00Z\",\"window_end\":\"2026-11-15T00:00:00Z\"}}";
     private static final String ROUTING = """
             routing:
@@ -178,6 +178,15 @@ class EngineTest {
         enable();
         assertEquals("Signed in with id_t...cdef from config.yml: Unlimited plan, 45 of 100 lookups with every "
                 + "field used today.", waitFor(platform.infos, "Signed in"));
+    }
+
+    @Test
+    void aPlanIsNamedAsTheApiNamesIt() throws Exception {
+        api.answer("/api/v1/entitlement", ENTITLEMENT.replace("\"name\":\"Starter\"", "\"name\":\"Data 250K\""));
+        config("api-key: \"id_test_0123456789abcdef\"\n");
+        enable();
+        assertEquals("Signed in with id_t...cdef from config.yml: Data 250K plan, 545 of 250,000 lookups used, "
+                + "renewing 2026-12-01.", waitFor(platform.infos, "Signed in"));
     }
 
     @Test

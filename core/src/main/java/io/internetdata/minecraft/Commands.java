@@ -5,6 +5,7 @@ import io.internetdata.Result;
 import io.internetdata.model.Asn;
 import io.internetdata.model.CarrierDetail;
 import io.internetdata.model.Entitlement;
+import io.internetdata.model.EntitlementPlan;
 import io.internetdata.model.Location;
 import io.internetdata.model.ProxyDetail;
 import io.internetdata.model.SatelliteDetail;
@@ -220,19 +221,20 @@ public final class Commands {
 
     /**
      * A plan and what is left of it, like "Starter plan, 1,234 of 250,000 lookups used, renewing 2026-12-01".
-     * The free plan, Unlimited, answers every lookup with no cap and the first ones each UTC day with every
-     * field, which is what its usage counts, so it reads "Unlimited plan, 45 of 100 lookups with every field
-     * used today".
+     * The plan is named as the API names it, so a renamed plan reads right without an update. The free plan,
+     * Unlimited, answers every lookup with no cap and the first ones each UTC day with every field, which is
+     * what its usage counts, so it reads "Unlimited plan, 45 of 100 lookups with every field used today".
      */
     static String usage(Entitlement entitlement) {
-        String key = entitlement.getPlan() == null ? null : entitlement.getPlan().getKey();
+        EntitlementPlan p = entitlement.getPlan();
+        String key = p == null ? null : p.getKey();
+        String plan = (p == null || p.getName() == null || p.getName().isBlank() ? "your" : p.getName()) + " plan";
         if (FREE_PLAN.equals(key) && entitlement.getUsage() != null
                 && entitlement.getUsage().getRequests() != null && entitlement.getUsage().getQuota() != null) {
-            return String.format(Locale.ROOT, "Unlimited plan, %,d of %,d lookups with every field used today",
-                    entitlement.getUsage().getRequests(), entitlement.getUsage().getQuota());
+            return String.format(Locale.ROOT, "%s, %,d of %,d lookups with every field used today",
+                    plan, entitlement.getUsage().getRequests(), entitlement.getUsage().getQuota());
         }
-        String plan = key == null ? "your" : capitalize(key);
-        StringBuilder out = new StringBuilder(plan + " plan");
+        StringBuilder out = new StringBuilder(plan);
         if (entitlement.getUsage() != null) {
             Long requests = entitlement.getUsage().getRequests();
             Long quota = entitlement.getUsage().getQuota();
@@ -344,10 +346,6 @@ public final class Commands {
 
     private static String provider(String name, String id) {
         return name != null && !name.isBlank() ? name : id;
-    }
-
-    private static String capitalize(String word) {
-        return word.isEmpty() ? word : Character.toUpperCase(word.charAt(0)) + word.substring(1);
     }
 
     private static void say(Sender sender, String text) {
