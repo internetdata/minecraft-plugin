@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.0.2 - 2026-11-17
+
+### Fixes
+
+- Show the plan's name as the account serves it ([`1f2ff79`](https://github.com/internetdata/minecraft-plugin/commit/1f2ff794814717d415155a36b088d7e9fbaf0f9f))
+
 ## 1.0.1 - 2026-11-14
 
 ### Fixes
