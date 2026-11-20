@@ -11,7 +11,7 @@ It checks each player's address as they join, refuses or flags to your staff the
 
 Download `InternetData-<version>.jar` from the [latest release](https://github.com/internetdata/minecraft-plugin/releases/latest) and put it in your server's `plugins` folder, then restart. On a network, install it on the proxy alone: Velocity or BungeeCord sees each player once, before any server behind it does.
 
-The plugin works without an account on Unlimited, InternetData's free plan: countries, routing, Tor, privacy relays, mobile networks, satellites, anycast and hosting networks. VPNs and proxies need a paid plan, and a server signed in to a free account tries them for its first 100 lookups each day. To sign in, run this from the console:
+The plugin works without an account on Unlimited, InternetData's free plan: countries, routing, Tor, privacy relays, mobile networks, satellites, anycast and hosting networks. VPNs and proxies need a paid plan, and a server signed in to a free account tries them. To sign in, run this from the console:
 
 ```console
 /inetd login

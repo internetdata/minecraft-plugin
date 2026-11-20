@@ -53,7 +53,7 @@ final class Answers {
         return unlimitedAt(ip, LOCATION_BR, ASN_ISP, flags);
     }
 
-    /** A key on the free plan: the paid answer while its daily trial of 100 lasts, Unlimited's after. */
+    /** A key on the free plan: the paid answer while its trial lasts, Unlimited's after. */
     static String trial(String unlimitedOrPaid, boolean expired) {
         return unlimitedOrPaid.substring(0, unlimitedOrPaid.length() - 1) + ",\"trial_expired\":" + expired + "}";
     }

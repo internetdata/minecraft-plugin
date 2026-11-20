@@ -24,7 +24,7 @@
 ## 🎁 Free to start
 
 - No account: countries, routing, Tor, hosting networks, privacy relays, mobile networks, satellites and anycast, on every join
-- Free account, signed in with `/inetd login`: VPNs and proxies too, for 100 lookups a day
+- Free account, signed in with `/inetd login`: try VPNs and proxies too
 - Paid plan: every check on every join, with the provider named in your messages
 
 ## 🚀 Built for busy servers

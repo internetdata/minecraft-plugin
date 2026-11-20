@@ -337,8 +337,8 @@ public final class Engine {
     private void checkKey(State current) {
         if (current.apiKey() == null) {
             platform.info("No API key, so VPNs and proxies aren't checked, and hosting goes by the network an "
-                    + "address belongs to. Run /inetd login to sign in and try them, 100 lookups a day; a paid "
-                    + "plan checks them on every login.");
+                    + "address belongs to. Run /inetd login to sign in and try them; a paid plan checks them on "
+                    + "every login.");
             return;
         }
         executor.execute(() -> {

@@ -6,7 +6,7 @@
 # Your API key. Run /inetd login to sign in and have it filled in for you, or paste one from
 # https://app.internetdata.io. Without a key, countries, routing and every check below but vpn and
 # proxy work, and hosting goes by the network an address belongs to. Signed in, a server tries every
-# check, 100 lookups a day, and a paid plan answers them all on every login.
+# check, and a paid plan answers them all on every login.
 api-key: ""
 
 # What happens when a joining player's address is one of these:
@@ -14,7 +14,7 @@ api-key: ""
 #   alert   let them in, and tell staff who hold internetdata.alerts
 #   allow   do nothing
 checks:
-  # Commercial VPN servers. Needs a paid plan, or a signed-in server's first 100 lookups a day.
+  # Commercial VPN servers. Needs a paid plan, or a signed-in server's trial.
   vpn: block
   # Tor relays.
   tor: block
@@ -22,7 +22,7 @@ checks:
   # by the network an address belongs to; with one, address by address.
   hosting: block
   # Residential, datacenter, mobile and public proxies. Needs a paid plan, or a signed-in server's
-  # first 100 lookups a day.
+  # trial.
   proxy: block
   # Privacy relays and company web gateways, like iCloud Private Relay.
   relay: alert
