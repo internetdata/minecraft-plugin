@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.0.4 - 2026-11-20
+
+### Fixes
+
+- Say when the overage cap holds checks back ([`755b5c5`](https://github.com/internetdata/minecraft-plugin/commit/755b5c5f6407bfec1f16789c82ed1d0ad6844c19))
+
 ## 1.0.3 - 2026-11-20
 
 ### Fixes
