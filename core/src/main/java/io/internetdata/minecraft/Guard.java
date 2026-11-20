@@ -79,6 +79,11 @@ final class Guard {
             }
             return new Verdict(Action.ALLOW, List.of(), false, Optional.of(result), Optional.empty());
         }
+        boolean capped = result.capReached().orElse(false);
+        if (capped) {
+            warnOnce.accept("your organization has reached the overage cap it set, so lookups answer with the "
+                    + "free plan's checks until the billing period ends or the cap is raised in Billing.");
+        }
         Tally tally = new Tally();
         for (Map.Entry<Check, Action> entry : settings.checks.entrySet()) {
             Check check = entry.getKey();
@@ -87,8 +92,8 @@ final class Guard {
                 continue;
             }
             if (!check.served(result)) {
-                warnOnce.accept("checks." + check.key() + " is " + action.key() + ", but " + needs()
-                        + ", so it never matches.");
+                warnOnce.accept("checks." + check.key() + " is " + action.key() + ", but "
+                        + (capped ? "past the overage cap it isn't answered" : needs()) + ", so it never matches.");
                 continue;
             }
             check.match(result).ifPresent(reason -> tally.add(action, reason, false));

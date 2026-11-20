@@ -148,6 +148,14 @@ class GuardTest {
     }
 
     @Test
+    void aPaidKeyPastItsOverageCapSaysTheCapIsWhy() throws Exception {
+        api.answer("/" + HOSTING_IP,
+                Answers.capped(Answers.unlimitedAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247)));
+        check(guard("api-key: \"id_test_0123456789abcdef\"\nchecks: {vpn: block}", ""), HOSTING_IP);
+        assertTrue(warnings.stream().anyMatch(w -> w.contains("reached the overage cap")), warnings.toString());
+    }
+
+    @Test
     void aTrialKeyWithinItsDayIsAnsweredInFull() throws Exception {
         api.answer("/" + HOSTING_IP, Answers.trial(Answers.paid(HOSTING_IP), false));
         Verdict verdict = check(guard("checks: {vpn: alert, hosting: block, proxy: block}", ""), HOSTING_IP);

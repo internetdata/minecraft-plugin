@@ -54,6 +54,10 @@ final class Answers {
     }
 
     /** A key on the free plan: the paid answer while its trial lasts, Unlimited's after. */
+    static String capped(String unlimited) {
+        return unlimited.substring(0, unlimited.length() - 1) + ",\"cap_reached\":true}";
+    }
+
     static String trial(String unlimitedOrPaid, boolean expired) {
         return unlimitedOrPaid.substring(0, unlimitedOrPaid.length() - 1) + ",\"trial_expired\":" + expired + "}";
     }
