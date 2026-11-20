@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.0.3 - 2026-11-20
+
+### Fixes
+
+- Messages, config and store text: the free trial without a count ([`30f90d0`](https://github.com/internetdata/minecraft-plugin/commit/30f90d024d16ae9080bf4b7d9f545eeee3881cbf))
+
 ## 1.0.2 - 2026-11-17
 
 ### Fixes
