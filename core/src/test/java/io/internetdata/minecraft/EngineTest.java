@@ -29,7 +29,7 @@ class EngineTest {
     private static final String FREE_PLAN_ENTITLEMENT = "{\"org_id\":\"f32191d0-ef02-450e-a505-eb5814c35cab\","
             + "\"apikey\":{\"id\":\"10c2b437-3aa2-4a63-bd17-8e7c8c7f0def\",\"expires\":null,\"allowed_cidrs\":[]},"
             + "\"plan\":{\"key\":\"free\",\"tier\":\"free\",\"name\":\"Unlimited\"},\"usage\":{\"requests\":45,\"quota\":100,"
-            + "\"hard_limit\":null,\"window_start\":\"2026-11-14T00:00:00Z\",\"window_end\":\"2026-11-15T00:00:00Z\"}}";
+            + "\"hard_limit\":null,\"window_start\":\"2026-11-01T00:00:00Z\",\"window_end\":\"2026-12-01T00:00:00Z\"}}";
     private static final String ROUTING = """
             routing:
               continents: {EU: lobby-eu, SA: lobby-sa}
@@ -177,7 +177,7 @@ class EngineTest {
         config("api-key: \"id_test_0123456789abcdef\"\n");
         enable();
         assertEquals("Signed in with id_t...cdef from config.yml: Unlimited plan, 45 of 100 lookups with every "
-                + "field used today.", waitFor(platform.infos, "Signed in"));
+                + "field used this month, resetting 2026-12-01.", waitFor(platform.infos, "Signed in"));
     }
 
     @Test
