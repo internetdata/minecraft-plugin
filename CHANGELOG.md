@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.0.5 - 2026-11-22
+
+### Fixes
+
+- Count a free key's trial by the month, with the day it resets ([`aed2dd2`](https://github.com/internetdata/minecraft-plugin/commit/aed2dd2d1a432742d9936cd27a62a0efc7e4db8c))
+
 ## 1.0.4 - 2026-11-20
 
 ### Fixes
