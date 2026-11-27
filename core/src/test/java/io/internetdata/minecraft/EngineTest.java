@@ -102,12 +102,12 @@ class EngineTest {
     @Test
     void aFlaggedLoginIsToldToStaffWithTheirCountry() throws Exception {
         String ip = "98.97.1.2";
-        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "satellite"));
+        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "relay"));
         enable();
         Verdict verdict = engine.login("Alex", UUID.randomUUID(), InetAddress.getByName(ip));
         assertEquals(Action.ALERT, verdict.action());
         assertEquals(List.of(Engine.ALERTS + " §8[§3InternetData§8] §fAlex §7joined from §f98.97.1.2 §7(BR): "
-                + "§esatellite (SpaceX Services, Inc.)"), platform.notified);
+                + "§eprivacy relay (iCloud Private Relay)"), platform.notified);
         assertEquals(1, engine.flagged.get());
     }
 

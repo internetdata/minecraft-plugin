@@ -4,8 +4,8 @@
 # Guide: https://docs.internetdata.io/integrations/minecraft
 
 # Your API key. Run /inetd login to sign in and have it filled in for you, or paste one from
-# https://app.internetdata.io. Without a key, countries, routing and every check below but vpn and
-# proxy work, and hosting goes by the network an address belongs to. Signed in, a server tries every
+# https://app.internetdata.io. Without a key, countries, routing and every check below but vpn, proxy,
+# carrier and satellite work, and hosting goes by the network an address belongs to. Signed in, a server tries every
 # check, and a paid plan answers them all on every login.
 api-key: ""
 
@@ -26,9 +26,11 @@ checks:
   proxy: block
   # Privacy relays and company web gateways, like iCloud Private Relay.
   relay: alert
-  # Mobile networks, whose addresses many players share and swap, so a ban on one misses.
+  # Mobile networks, whose addresses many players share and swap, so a ban on one misses. Needs a
+  # paid plan, or a signed-in server's trial.
   carrier: alert
-  # Satellite internet, like Starlink, whose addresses are shared too.
+  # Satellite internet, like Starlink, whose addresses are shared too. Needs a paid plan, or a
+  # signed-in server's trial.
   satellite: alert
   # Anycast addresses, which many places announce at once, so no one player's home is behind one.
   anycast: alert

@@ -268,10 +268,10 @@ public final class Commands {
     private static String network(Result r) {
         String asName = r.asn() == null ? null : r.asn().getName();
         return String.join("&7, ", List.of(
-                field("Carrier", Optional.of(r.isCarrier()),
+                field("Carrier", Optional.ofNullable(r.raw().getIsCarrier()),
                         r.carrier().map(CarrierDetail::getName).filter(n -> !n.isBlank())
                                 .or(() -> Optional.ofNullable(asName))),
-                field("satellite", Optional.of(r.isSatellite()),
+                field("satellite", Optional.ofNullable(r.raw().getIsSatellite()),
                         r.satellite().map(Commands::provider).filter(n -> !n.isBlank())
                                 .or(() -> Optional.ofNullable(asName))),
                 field("anycast", Optional.of(r.isAnycast()), Optional.empty())));

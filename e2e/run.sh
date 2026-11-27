@@ -187,7 +187,7 @@ EOF
     fi
     expect "a home connection gets in" "$admitted" "$(admitted_text "$project" lobby)" \
         probe "$port" alex 177.1.2.3 $mode || ok=1
-    expect "a satellite connection gets in" "$admitted" "$(admitted_text "$project" na)" \
+    expect "an anycast connection gets in" "$admitted" "$(admitted_text "$project" na)" \
         probe "$port" sky 98.97.1.2 $mode || ok=1
     expect "a bypassed address gets in" "$admitted" "$(admitted_text "$project" lobby)" \
         probe "$port" staff 8.8.4.4 $mode || ok=1
@@ -219,8 +219,8 @@ EOF
         echo "  FAIL the console never logged bot1's refusal"
         ok=1
     fi
-    if grep -q "sky joined from 98.97.1.2 (US): satellite (SpaceX Services, Inc.)" "$dir/console.log"; then
-        echo "  ok   the console logs the satellite connection flagged to staff"
+    if grep -q "sky joined from 98.97.1.2 (US): anycast (SpaceX Services, Inc.)" "$dir/console.log"; then
+        echo "  ok   the console logs the anycast connection flagged to staff"
     else
         echo "  FAIL the console never logged sky's flag"
         ok=1

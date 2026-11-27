@@ -21,7 +21,8 @@ public final class StubApi {
     private static final String LOCATION = "{\"continent\":\"%s\",\"continent_name\":\"%s\",\"country\":\"%s\","
             + "\"country_name\":\"%s\",\"timezone\":\"\",\"currency_code\":\"\",\"currency_name\":\"\","
             + "\"currency_symbol\":\"\",\"flag_emoji\":\"\",\"flag_unicode\":\"\"}";
-    private static final String ASN = "{\"asn\":%d,\"name\":\"%s\",\"domain\":\"\",\"type\":\"%s\",\"prefix\":\"%s\"}";
+    private static final String ASN = "{\"asn\":%d,\"name\":\"%s\",\"domain\":\"\",\"type\":\"%s\",\"prefix\":\"%s\","
+            + "\"country\":\"\",\"rpki_status\":\"valid\"}";
     private static final String TOR = "{\"provider\":\"\",\"provider_name\":\"\",\"confidence\":\"high\","
             + "\"last_seen\":\"2026-11-13\"}";
 
@@ -36,7 +37,7 @@ public final class StubApi {
             "/84.128.1.2", answer("84.128.1.2", "", String.format(LOCATION, "EU", "Europe", "DE", "Germany"),
                     String.format(ASN, 3320, "Deutsche Telekom AG", "isp", "84.128.0.0/10")),
             // Starlink in the United States: flagged to staff, and sent to the na server.
-            "/98.97.1.2", answer("98.97.1.2", "satellite",
+            "/98.97.1.2", answer("98.97.1.2", "anycast",
                     String.format(LOCATION, "NA", "North America", "US", "United States"),
                     String.format(ASN, 14593, "SpaceX Services, Inc.", "isp", "98.97.0.0/16")),
             // A home connection in a country the run's config.yml refuses.
@@ -71,12 +72,11 @@ public final class StubApi {
         System.out.println("listening on " + port);
     }
 
-    // An answer with no key: the flags every plan carries, the one named true.
+    // An answer with no key: the flags every plan carries, the one named true. The bot, carrier,
+    // satellite and service flags are a paid answer's, so it has none of them.
     private static String answer(String ip, String flag, String location, String asn) {
         return "{\"ip\":\"" + ip + "\",\"is_bogon\":false,\"is_tor\":" + flag.equals("tor")
-                + ",\"is_relay\":false,\"is_anycast\":false,\"is_carrier\":false,\"is_satellite\":"
-                + flag.equals("satellite") + ",\"is_ssh\":false,\"is_smtp\":false,\"is_web\":false,"
-                + "\"is_dns_resolver\":false,\"is_bittorrent\":false,"
+                + ",\"is_relay\":false,\"is_anycast\":" + flag.equals("anycast") + ","
                 + "\"tor\":" + (flag.equals("tor") ? TOR : "{}") + ",\"relay\":{},\"location\":" + location
                 + ",\"asn\":" + asn + ",\"company\":{\"name\":\"\",\"domain\":\"\"},\"hostname\":\"\","
                 + "\"abuse\":{\"email\":\"\"}}";

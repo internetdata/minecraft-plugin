@@ -92,15 +92,15 @@ class CommandsTest {
     @Test
     void checkWithNoKeySaysWhatTheAnswerLeavesOut() throws Exception {
         api.answer("/98.97.1.2", Answers.unlimitedAt("98.97.1.2", Answers.LOCATION_BR, Answers.ASN_STARLINK,
-                "satellite"));
+                "anycast"));
         run("check", "98.97.1.2");
         waitForLines(5);
         assertEquals("VPN not in your plan, Tor no, hosting not in your plan, proxy not in your plan, relay no",
                 said.get(1));
-        assertEquals("Carrier no, satellite yes (SpaceX Services, Inc.), anycast no", said.get(2));
+        assertEquals("Carrier not in your plan, satellite not in your plan, anycast yes", said.get(2));
         assertEquals("Country Brazil (BR) in South America, network AS14593 SpaceX Services, Inc. (isp)",
                 said.get(3));
-        assertEquals("A login gets: let in, and staff alerted, for satellite (SpaceX Services, Inc.)", said.get(4));
+        assertEquals("A login gets: let in, and staff alerted, for anycast (SpaceX Services, Inc.)", said.get(4));
     }
 
     @Test

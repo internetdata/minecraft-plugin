@@ -108,11 +108,12 @@ public enum Check {
         }
     },
     CARRIER {
-        // The carrier's own name is a paid answer's; without one, the network announcing the address
-        // names it well enough.
+        // On a paid plan or the trial. The SDK reads an absent flag as false, so the raw answer tells
+        // whether the plan carries it. The carrier's own name can be missing; the network announcing
+        // the address names it well enough then.
         @Override
         boolean served(Result result) {
-            return true;
+            return result.raw().getIsCarrier() != null;
         }
 
         @Override
@@ -125,9 +126,10 @@ public enum Check {
         }
     },
     SATELLITE {
+        // On a paid plan or the trial, told apart as CARRIER's is.
         @Override
         boolean served(Result result) {
-            return true;
+            return result.raw().getIsSatellite() != null;
         }
 
         @Override

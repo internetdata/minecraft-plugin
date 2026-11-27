@@ -73,16 +73,19 @@ class GuardTest {
     void aCheckThePlanDoesNotAnswerIsReportedAndNeverMatches() throws Exception {
         api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP));
         assertEquals(Action.ALLOW, check(guard("", ""), TOR_IP).action());
-        assertEquals(2, warnings.size(), warnings.toString());
+        assertEquals(4, warnings.size(), warnings.toString());
         assertTrue(warnings.get(0).startsWith("checks.vpn is block, but it needs a paid plan"), warnings.get(0));
         assertTrue(warnings.get(1).startsWith("checks.proxy is block") && warnings.get(1).contains("/inetd login"),
                 warnings.get(1));
+        assertTrue(warnings.get(2).startsWith("checks.carrier is alert, but it needs a paid plan"), warnings.get(2));
+        assertTrue(warnings.get(3).startsWith("checks.satellite is alert, but it needs a paid plan"), warnings.get(3));
     }
 
     @Test
     void anAnswerWithNoKeyFindsAHostingNetworkByTheTypeOfItsAs() throws Exception {
         api.answer("/" + HOSTING_IP, Answers.unlimitedAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247));
-        Verdict verdict = check(guard("checks: {vpn: allow, proxy: allow, hosting: alert}", ""), HOSTING_IP);
+        Verdict verdict = check(guard("checks: {vpn: allow, proxy: allow, hosting: alert, carrier: allow, "
+                + "satellite: allow}", ""), HOSTING_IP);
         assertEquals(Action.ALERT, verdict.action());
         assertEquals("hosting network (M247 Europe SRL)", verdict.reason());
         assertEquals(List.of(), warnings);
@@ -112,13 +115,14 @@ class GuardTest {
     @Test
     void theFreeAnswersOwnFlagsAlertStaffByDefault() throws Exception {
         String ip = "98.97.1.2";
-        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "relay", "carrier",
-                "satellite", "anycast"));
+        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "relay", "anycast"));
         Verdict verdict = check(guard("checks: {vpn: allow, proxy: allow}", ""), ip);
         assertEquals(Action.ALERT, verdict.action());
-        assertEquals(List.of("privacy relay (iCloud Private Relay)", "mobile network (SpaceX Services, Inc.)",
-                "satellite (SpaceX Services, Inc.)", "anycast (SpaceX Services, Inc.)"), verdict.reasons());
-        assertEquals(List.of(), warnings);
+        assertEquals(List.of("privacy relay (iCloud Private Relay)", "anycast (SpaceX Services, Inc.)"),
+                verdict.reasons());
+        assertEquals(List.of("checks.carrier is alert, but it needs a paid plan, which signing in lets you try "
+                + "(run /inetd login), so it never matches.", "checks.satellite is alert, but it needs a paid plan, "
+                + "which signing in lets you try (run /inetd login), so it never matches."), warnings);
     }
 
     @Test
@@ -239,12 +243,12 @@ class GuardTest {
     @Test
     void rulesWithNoKeyMatchOnWhatEveryAnswerCarries() throws Exception {
         String ip = "177.1.2.3";
-        api.answer("/" + ip, Answers.unlimited(ip, "ssh"));
+        api.answer("/" + ip, Answers.unlimited(ip, "anycast"));
         String yaml = NOTHING + """
                 rules:
                   - action: alert
-                    reason: an SSH server
-                    match: {is_ssh: true}
+                    reason: an anycast address
+                    match: {is_anycast: true}
                   - action: block
                     reason: Claro
                     match:

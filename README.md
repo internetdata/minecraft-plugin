@@ -11,7 +11,7 @@ It checks each player's address as they join, refuses or flags to your staff the
 
 Download `InternetData-<version>.jar` from the [latest release](https://github.com/internetdata/minecraft-plugin/releases/latest) and put it in your server's `plugins` folder, then restart. On a network, install it on the proxy alone: Velocity or BungeeCord sees each player once, before any server behind it does.
 
-The plugin works without an account on Unlimited, InternetData's free plan: countries, routing, Tor, privacy relays, mobile networks, satellites, anycast and hosting networks. VPNs and proxies need a paid plan, and a server signed in to a free account tries them. To sign in, run this from the console:
+The plugin works without an account on Unlimited, InternetData's free plan: countries, routing, Tor, privacy relays, anycast and hosting networks. VPNs, proxies, mobile networks and satellites need a paid plan, and a server signed in to a free account tries them. To sign in, run this from the console:
 
 ```console
 /inetd login
@@ -32,8 +32,8 @@ It runs on Java 17 or newer: Paper, Spigot, Purpur, Folia and other Bukkit serve
 | `hosting` | Datacenters and cloud providers | nothing | `block` |
 | `proxy` | Residential, datacenter, mobile and public proxies | a paid plan | `block` |
 | `relay` | Privacy relays and company web gateways, like iCloud Private Relay | nothing | `alert` |
-| `carrier` | Mobile networks, whose addresses many players share | nothing | `alert` |
-| `satellite` | Satellite internet, like Starlink | nothing | `alert` |
+| `carrier` | Mobile networks, whose addresses many players share | a paid plan | `alert` |
+| `satellite` | Satellite internet, like Starlink | a paid plan | `alert` |
 | `anycast` | Anycast addresses, which many places announce at once | nothing | `alert` |
 
 Without a paid plan, `hosting` goes by the kind of network announcing the address; a paid plan answers it for each address and names the VPN, hosting or proxy provider in your messages. A privacy relay is judged by `relay` alone, even where it runs on a hosting network, so iCloud Private Relay and WARP users are flagged to staff rather than refused. A check your plan doesn't answer is skipped, and the console says so once. The [pricing page](https://internetdata.io/pricing) says what each plan answers.

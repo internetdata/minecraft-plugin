@@ -19,13 +19,13 @@ final class Answers {
             + "\"country_name\":\"\",\"timezone\":\"\",\"currency_code\":\"\",\"currency_name\":\"\","
             + "\"currency_symbol\":\"\",\"flag_emoji\":\"\",\"flag_unicode\":\"\"}";
     static final String ASN_M247 = "{\"asn\":9009,\"name\":\"M247 Europe SRL\",\"domain\":\"m247global.com\","
-            + "\"type\":\"hosting\",\"prefix\":\"146.70.116.0/24\"}";
+            + "\"type\":\"hosting\",\"prefix\":\"146.70.116.0/24\",\"country\":\"RO\",\"rpki_status\":\"valid\"}";
     static final String ASN_CLOUDFLARE = "{\"asn\":13335,\"name\":\"Cloudflare, Inc.\",\"domain\":\"cloudflare.com\","
-            + "\"type\":\"hosting\",\"prefix\":\"104.28.0.0/16\"}";
+            + "\"type\":\"hosting\",\"prefix\":\"104.28.0.0/16\",\"country\":\"US\",\"rpki_status\":\"valid\"}";
     static final String ASN_ISP = "{\"asn\":28573,\"name\":\"Claro NXT\",\"domain\":\"claro.com.br\","
-            + "\"type\":\"isp\",\"prefix\":\"177.0.0.0/14\"}";
+            + "\"type\":\"isp\",\"prefix\":\"177.0.0.0/14\",\"country\":\"BR\",\"rpki_status\":\"valid\"}";
     static final String ASN_STARLINK = "{\"asn\":14593,\"name\":\"SpaceX Services, Inc.\",\"domain\":\"spacex.com\","
-            + "\"type\":\"isp\",\"prefix\":\"98.97.0.0/16\"}";
+            + "\"type\":\"isp\",\"prefix\":\"98.97.0.0/16\",\"country\":\"US\",\"rpki_status\":\"valid\"}";
     private static final String TOR = "{\"provider\":\"\",\"provider_name\":\"\",\"confidence\":\"high\","
             + "\"last_seen\":\"2026-11-13\"}";
     private static final String RELAY = "{\"provider\":\"apple\",\"provider_name\":\"iCloud Private Relay\","
@@ -33,16 +33,13 @@ final class Answers {
 
     /**
      * Unlimited, with no key or past a free key's daily trial: the flags every plan answers, true for
-     * each one named in {@code flags} (tor, relay, anycast, carrier, satellite, ssh), and where the
-     * address is and who holds it.
+     * each one named in {@code flags} (tor, relay, anycast), and where the address is and who holds it.
+     * The bot, carrier, satellite and service flags are a paid answer's, so it has none of them.
      */
     static String unlimitedAt(String ip, String location, String asn, String... flags) {
         Set<String> on = Set.of(flags);
         return "{\"ip\":\"" + ip + "\",\"is_bogon\":false,\"is_tor\":" + on.contains("tor")
                 + ",\"is_relay\":" + on.contains("relay") + ",\"is_anycast\":" + on.contains("anycast")
-                + ",\"is_carrier\":" + on.contains("carrier") + ",\"is_satellite\":" + on.contains("satellite")
-                + ",\"is_ssh\":" + on.contains("ssh") + ",\"is_smtp\":false,\"is_web\":false"
-                + ",\"is_dns_resolver\":false,\"is_bittorrent\":false"
                 + ",\"tor\":" + (on.contains("tor") ? TOR : "{}") + ",\"relay\":" + (on.contains("relay") ? RELAY : "{}")
                 + ",\"location\":" + location + ",\"asn\":" + asn
                 + ",\"company\":{\"name\":\"\",\"domain\":\"\"},\"hostname\":\"\",\"abuse\":{\"email\":\"\"}}";
