@@ -177,7 +177,7 @@ class EngineTest {
         config("api-key: \"id_test_0123456789abcdef\"\n");
         enable();
         assertEquals("Signed in with id_t...cdef from config.yml: Unlimited plan, 45 of 100 lookups with every "
-                + "field used this month, resetting 2026-12-01.", waitFor(platform.infos, "Signed in"));
+                + "field used in its trial to 2026-12-01.", waitFor(platform.infos, "Signed in"));
     }
 
     @Test

@@ -220,11 +220,11 @@ public final class Commands {
     static final String FREE_PLAN = "free";
 
     /**
-     * A plan and what is left of it, like "Starter plan, 1,234 of 250,000 lookups used, renewing 2026-12-01".
-     * The plan is named as the API names it, so a renamed plan reads right without an update. The free plan,
-     * Unlimited, answers every lookup with no cap and the first ones in the API's window (a UTC calendar month
-     * since 2026-11-21) with every field, which is what its usage counts, so it reads "Unlimited plan, 45 of 100
-     * lookups with every field used this month, resetting 2026-12-01".
+     * A plan and what is left of it, {@code <plan> plan, <used> of <quota> lookups used, renewing <date>}, the
+     * plan named as the API names it, so a renamed plan, or the Data plan sold at several quotas, reads right
+     * with no update. The free plan, Unlimited, answers every lookup with no cap, and with every field through
+     * its trial, which is what its usage counts: {@code Unlimited plan, <used> of <limit> lookups with every
+     * field used in its trial to <date>}. No figure is written here: each is the API's.
      */
     static String usage(Entitlement entitlement) {
         EntitlementPlan p = entitlement.getPlan();
@@ -232,10 +232,10 @@ public final class Commands {
         String plan = (p == null || p.getName() == null || p.getName().isBlank() ? "your" : p.getName()) + " plan";
         if (FREE_PLAN.equals(key) && entitlement.getUsage() != null
                 && entitlement.getUsage().getRequests() != null && entitlement.getUsage().getQuota() != null) {
-            String free = String.format(Locale.ROOT, "%s, %,d of %,d lookups with every field used this month",
+            String free = String.format(Locale.ROOT, "%s, %,d of %,d lookups with every field used in its trial",
                     plan, entitlement.getUsage().getRequests(), entitlement.getUsage().getQuota());
             return entitlement.getUsage().getWindowEnd() == null ? free
-                    : free + ", resetting " + entitlement.getUsage().getWindowEnd().toLocalDate();
+                    : free + " to " + entitlement.getUsage().getWindowEnd().toLocalDate();
         }
         StringBuilder out = new StringBuilder(plan);
         if (entitlement.getUsage() != null) {

@@ -14,7 +14,7 @@ import java.util.Optional;
  *
  * <p>Tor, relays, mobile networks, satellites, anycast and the type of the network announcing an
  * address are on every answer, with a key or without one. VPNs, proxies and hosting by address are a
- * paid plan's, or a free account's for its first lookups each day: the SDK answers those as an empty
+ * paid plan's, or a free account's through its trial: the SDK answers those as an empty
  * Optional when the plan leaves them out, and {@link #served} says so, so a check that never could
  * match is reported once rather than silently never firing.
  */
