@@ -2,6 +2,13 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.0.6 - 2026-11-27
+
+### Fixes
+
+- Take SDK 3.0.0, and check carriers and satellites on a paid plan ([`b2cd320`](https://github.com/internetdata/minecraft-plugin/commit/b2cd320d1322be5355010b6d5cde5ff613992b86))
+  - Without a key, every lookup had failed since 2026-11-26, letting players in unchecked. Carriers and satellites now need a paid plan or a signed-in server's trial.
+
 ## 1.0.5 - 2026-11-22
 
 ### Fixes
