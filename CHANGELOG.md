@@ -2,6 +2,13 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.0.7 - 2026-11-27
+
+### Fixes
+
+- /inetd status words the trial as a window, not a month ([`000b1a2`](https://github.com/internetdata/minecraft-plugin/commit/000b1a26e023e1309f5977dc20d09f19b8cf41ad))
+  - On the free plan, `/inetd status` and the line the plugin prints once signed in read "used this month, resetting" a date. They now say how many lookups with every field the trial has used, and the day it ends.
+
 ## 1.0.6 - 2026-11-27
 
 ### Fixes
