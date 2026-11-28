@@ -91,7 +91,7 @@ class CommandsTest {
 
     @Test
     void checkWithNoKeySaysWhatTheAnswerLeavesOut() throws Exception {
-        api.answer("/98.97.1.2", Answers.unlimitedAt("98.97.1.2", Answers.LOCATION_BR, Answers.ASN_STARLINK,
+        api.answer("/98.97.1.2", Answers.keylessAt("98.97.1.2", Answers.LOCATION_BR, Answers.ASN_STARLINK,
                 "anycast"));
         run("check", "98.97.1.2");
         waitForLines(5);
@@ -104,7 +104,7 @@ class CommandsTest {
 
     @Test
     void checkOnAProxySaysWhereRoutingSendsThem() throws Exception {
-        api.answer("/177.1.2.3", Answers.unlimited("177.1.2.3"));
+        api.answer("/177.1.2.3", Answers.keyless("177.1.2.3"));
         platform.servers = Optional.of(Set.of("lobby-sa"));
         Files.writeString(dir.resolve("config.yml"), "routing: {continents: {SA: lobby-sa}}\n");
         engine.reload();

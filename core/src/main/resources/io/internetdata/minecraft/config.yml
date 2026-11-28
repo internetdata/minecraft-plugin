@@ -4,9 +4,10 @@
 # Guide: https://docs.internetdata.io/integrations/minecraft
 
 # Your API key. Run /inetd login to sign in and have it filled in for you, or paste one from
-# https://app.internetdata.io. Without a key, countries, routing, Tor, relays and anycast work; vpn,
-# hosting, proxy, carrier and satellite need a paid plan or a free key's full answers. Signed in, a
-# server tries every check, and a paid plan answers them all on every login.
+# https://app.internetdata.io. Without a key, countries, routing, Tor, relays and anycast work for a
+# daily allowance of lookups; vpn, hosting, proxy, carrier and satellite need a paid plan or a free
+# key's full answers. Signed in, a server gets every check on each day's first lookups, then those
+# that work without a key until the next day; a paid plan answers them all on every login.
 api-key: ""
 
 # What happens when a joining player's address is one of these:

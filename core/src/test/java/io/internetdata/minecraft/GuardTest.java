@@ -63,7 +63,7 @@ class GuardTest {
 
     @Test
     void theShippedDefaultsBlockTorWithNoKey() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP, "tor"));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP, "tor"));
         Verdict verdict = check(guard("", ""), TOR_IP);
         assertEquals(Action.BLOCK, verdict.action());
         assertEquals("Tor", verdict.reason());
@@ -71,7 +71,7 @@ class GuardTest {
 
     @Test
     void aCheckThePlanDoesNotAnswerIsReportedAndNeverMatches() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP));
         assertEquals(Action.ALLOW, check(guard("", ""), TOR_IP).action());
         assertEquals(5, warnings.size(), warnings.toString());
         assertTrue(warnings.get(0).startsWith("checks.vpn is block, but it needs a paid plan"), warnings.get(0));
@@ -84,7 +84,7 @@ class GuardTest {
 
     @Test
     void anAnswerWithNoKeyNeverHasHostingToMatch() throws Exception {
-        api.answer("/" + HOSTING_IP, Answers.unlimitedAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247));
+        api.answer("/" + HOSTING_IP, Answers.keylessAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247));
         Verdict verdict = check(guard("checks: {vpn: allow, proxy: allow, hosting: alert, carrier: allow, "
                 + "satellite: allow}", ""), HOSTING_IP);
         assertEquals(Action.ALLOW, verdict.action());
@@ -95,7 +95,7 @@ class GuardTest {
     @Test
     void aNetworkTypeOnAnAnswerWithNoHostingFlagIsNotTakenForHosting() throws Exception {
         api.answer("/" + HOSTING_IP,
-                Answers.unlimitedWithAsType(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247));
+                Answers.keylessWithAsType(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247));
         Verdict verdict = check(guard("checks: {vpn: allow, proxy: allow, hosting: block, carrier: allow, "
                 + "satellite: allow}", ""), HOSTING_IP);
         assertEquals(Action.ALLOW, verdict.action());
@@ -105,7 +105,7 @@ class GuardTest {
     @Test
     void theShippedDefaultsAlertARelayOnAHostingNetworkRatherThanRefuseIt() throws Exception {
         String ip = "104.28.60.1";
-        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_AT, Answers.ASN_CLOUDFLARE, "relay"));
+        api.answer("/" + ip, Answers.keylessAt(ip, Answers.LOCATION_AT, Answers.ASN_CLOUDFLARE, "relay"));
         Verdict verdict = check(guard("", ""), ip);
         assertEquals(Action.ALERT, verdict.action());
         assertEquals(List.of("privacy relay (iCloud Private Relay)"), verdict.reasons());
@@ -126,7 +126,7 @@ class GuardTest {
     @Test
     void theFreeAnswersOwnFlagsAlertStaffByDefault() throws Exception {
         String ip = "98.97.1.2";
-        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "relay", "anycast"));
+        api.answer("/" + ip, Answers.keylessAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "relay", "anycast"));
         Verdict verdict = check(guard("checks: {vpn: allow, proxy: allow}", ""), ip);
         assertEquals(Action.ALERT, verdict.action());
         assertEquals(List.of("privacy relay (iCloud Private Relay)", "anycast (SpaceX Services, Inc.)"),
@@ -152,9 +152,9 @@ class GuardTest {
     }
 
     @Test
-    void aFreeKeyPastItsTrialIsAnsweredWithoutHostingAndSaysWhatItLacks() throws Exception {
+    void aFreeKeyPastTheDaysFullAnswersIsAnsweredWithoutHostingAndSaysWhatItLacks() throws Exception {
         api.answer("/" + HOSTING_IP,
-                Answers.trial(Answers.unlimitedAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247), true));
+                Answers.trial(Answers.keylessAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247), true));
         Verdict verdict = check(guard("api-key: \"id_test_0123456789abcdef\"\nchecks: {hosting: block}", ""),
                 HOSTING_IP);
         assertEquals(Action.ALLOW, verdict.action());
@@ -168,13 +168,13 @@ class GuardTest {
     @Test
     void aPaidKeyPastItsOverageCapSaysTheCapIsWhy() throws Exception {
         api.answer("/" + HOSTING_IP,
-                Answers.capped(Answers.unlimitedAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247)));
+                Answers.capped(Answers.keylessAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247)));
         check(guard("api-key: \"id_test_0123456789abcdef\"\nchecks: {vpn: block}", ""), HOSTING_IP);
         assertTrue(warnings.stream().anyMatch(w -> w.contains("reached the overage cap")), warnings.toString());
     }
 
     @Test
-    void aTrialKeyWithinItsDayIsAnsweredInFull() throws Exception {
+    void aFreeKeyWithinTheDaysFullAnswersIsAnsweredInFull() throws Exception {
         api.answer("/" + HOSTING_IP, Answers.trial(Answers.paid(HOSTING_IP), false));
         Verdict verdict = check(guard("checks: {vpn: alert, hosting: block, proxy: block}", ""), HOSTING_IP);
         assertEquals(Action.BLOCK, verdict.action());
@@ -197,7 +197,7 @@ class GuardTest {
     @Test
     void countriesRefuseByBlockListAndByAllowList() throws Exception {
         String ip = "177.1.2.3";
-        api.answer("/" + ip, Answers.unlimited(ip));
+        api.answer("/" + ip, Answers.keyless(ip));
         Verdict blocked = check(guard("countries: {block: [br]}", ""), ip);
         assertEquals(Action.BLOCK, blocked.action());
         assertEquals("country (BR)", blocked.reason());
@@ -213,13 +213,13 @@ class GuardTest {
     @Test
     void anAddressNoCountryCanBePlacedIsLetIn() throws Exception {
         String ip = "177.1.2.3";
-        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_UNKNOWN, Answers.ASN_ISP));
+        api.answer("/" + ip, Answers.keylessAt(ip, Answers.LOCATION_UNKNOWN, Answers.ASN_ISP));
         assertEquals(Action.ALLOW, check(guard("countries: {allow: [US]}", ""), ip).action());
     }
 
     @Test
     void countriesWorkWithNoKey() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP));
         Verdict verdict = check(guard("countries: {block: [BR]}", ""), TOR_IP);
         assertEquals(Action.BLOCK, verdict.action());
         assertEquals("country (BR)", verdict.reason());
@@ -257,7 +257,7 @@ class GuardTest {
     @Test
     void rulesWithNoKeyMatchOnWhatEveryAnswerCarries() throws Exception {
         String ip = "177.1.2.3";
-        api.answer("/" + ip, Answers.unlimited(ip, "anycast"));
+        api.answer("/" + ip, Answers.keyless(ip, "anycast"));
         String yaml = NOTHING + """
                 rules:
                   - action: alert
@@ -277,7 +277,7 @@ class GuardTest {
 
     @Test
     void aRuleNamingAMemberThePlanDoesNotServeIsReported() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP));
         String yaml = NOTHING + """
                 rules:
                   - action: block
@@ -290,7 +290,7 @@ class GuardTest {
 
     @Test
     void aBypassedLoginIsNeverLookedUp() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP, "tor"));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP, "tor"));
         String[] lists = {"notch", PLAYER.toString(), PLAYER.toString().replace("-", ""), TOR_IP, "45.83.91.0/24"};
         for (String entry : lists) {
             Verdict verdict = check(guard("", entry + "  # a comment\n"), TOR_IP);
@@ -333,7 +333,7 @@ class GuardTest {
 
     @Test
     void playersJoiningTogetherFromOneAddressShareOneLookup() throws Exception {
-        api.route("/" + TOR_IP, request -> new StubApi.Answer(200, Answers.unlimited(TOR_IP, "tor"), 300));
+        api.route("/" + TOR_IP, request -> new StubApi.Answer(200, Answers.keyless(TOR_IP, "tor"), 300));
         Guard guard = guard("", "");
         int players = 8;
         ExecutorService pool = Executors.newFixedThreadPool(players);
@@ -363,7 +363,7 @@ class GuardTest {
 
     @Test
     void aPrefetchIsTheLookupTheLoginThenUses() throws Exception {
-        api.route("/" + TOR_IP, request -> new StubApi.Answer(200, Answers.unlimited(TOR_IP, "tor"), 300));
+        api.route("/" + TOR_IP, request -> new StubApi.Answer(200, Answers.keyless(TOR_IP, "tor"), 300));
         Guard guard = guard("", "");
         guard.prefetch(InetAddress.getByName(TOR_IP));
         assertEquals(Action.BLOCK, check(guard, TOR_IP).action());
@@ -372,7 +372,7 @@ class GuardTest {
 
     @Test
     void everyLookupNamesThePluginInItsUserAgent() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP));
         check(guard("", ""), TOR_IP);
         assertEquals("test/1", api.requests.get(0).header("User-Agent"));
     }

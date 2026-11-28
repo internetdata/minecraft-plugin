@@ -25,11 +25,12 @@ class EngineTest {
             + "\"apikey\":{\"id\":\"10c2b437-3aa2-4a63-bd17-8e7c8c7f0def\",\"expires\":null,\"allowed_cidrs\":[]},"
             + "\"plan\":{\"key\":\"starter\",\"tier\":\"starter\",\"name\":\"Starter\"},\"usage\":{\"requests\":545,\"quota\":250000,"
             + "\"hard_limit\":null,\"window_start\":\"2026-11-01T00:00:00Z\",\"window_end\":\"2026-12-01T00:00:00Z\"}}";
-    // An organization on the free plan, as the API names it: its usage counts the day's lookups with every field.
+    // An organization on the free plan, as the API names it: its usage counts the UTC day's lookups with every
+    // field, to the next midnight.
     private static final String FREE_PLAN_ENTITLEMENT = "{\"org_id\":\"f32191d0-ef02-450e-a505-eb5814c35cab\","
             + "\"apikey\":{\"id\":\"10c2b437-3aa2-4a63-bd17-8e7c8c7f0def\",\"expires\":null,\"allowed_cidrs\":[]},"
-            + "\"plan\":{\"key\":\"free\",\"tier\":\"free\",\"name\":\"Unlimited\"},\"usage\":{\"requests\":45,\"quota\":100,"
-            + "\"hard_limit\":null,\"window_start\":\"2026-11-01T00:00:00Z\",\"window_end\":\"2026-12-01T00:00:00Z\"}}";
+            + "\"plan\":{\"key\":\"free\",\"tier\":\"free\",\"name\":\"Free\"},\"usage\":{\"requests\":45,\"quota\":100,"
+            + "\"hard_limit\":null,\"window_start\":\"2026-11-28T00:00:00Z\",\"window_end\":\"2026-11-29T00:00:00Z\"}}";
     private static final String ROUTING = """
             routing:
               continents: {EU: lobby-eu, SA: lobby-sa}
@@ -83,7 +84,7 @@ class EngineTest {
 
     @Test
     void aRefusedLoginIsToldToStaffAndLoggedWithTheKickMessageItsPlayerSees() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP, "tor"));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP, "tor"));
         enable();
         InetAddress address = InetAddress.getByName(TOR_IP);
         Verdict verdict = engine.login("Steve", UUID.randomUUID(), address);
@@ -102,7 +103,7 @@ class EngineTest {
     @Test
     void aFlaggedLoginIsToldToStaffWithTheirCountry() throws Exception {
         String ip = "98.97.1.2";
-        api.answer("/" + ip, Answers.unlimitedAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "relay"));
+        api.answer("/" + ip, Answers.keylessAt(ip, Answers.LOCATION_BR, Answers.ASN_STARLINK, "relay"));
         enable();
         Verdict verdict = engine.login("Alex", UUID.randomUUID(), InetAddress.getByName(ip));
         assertEquals(Action.ALERT, verdict.action());
@@ -113,7 +114,7 @@ class EngineTest {
 
     @Test
     void anEmptyMessageTurnsItsAlertOff() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP, "tor"));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP, "tor"));
         config("messages: {blocked: \"\"}\n");
         enable();
         assertTrue(engine.login("Steve", UUID.randomUUID(), InetAddress.getByName(TOR_IP)).isBlocked());
@@ -134,7 +135,7 @@ class EngineTest {
 
     @Test
     void aReloadReadsTheFilesAgainAndKeepsTheCacheWhenTheKeyIsTheSame() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP, "tor"));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP, "tor"));
         enable();
         InetAddress address = InetAddress.getByName(TOR_IP);
         assertTrue(engine.login("Steve", UUID.randomUUID(), address).isBlocked());
@@ -172,12 +173,23 @@ class EngineTest {
     }
 
     @Test
-    void aKeyOnNoPaidPlanIsNamedAsTheApiNamesIt() throws Exception {
+    void aKeyOnNoPaidPlanIsNamedAsTheApiNamesItAndCountsTodaysLookupsWithEveryField() throws Exception {
         api.answer("/api/v1/entitlement", FREE_PLAN_ENTITLEMENT);
         config("api-key: \"id_test_0123456789abcdef\"\n");
         enable();
-        assertEquals("Signed in with id_t...cdef from config.yml: Unlimited plan, 45 of 100 lookups with every "
-                + "field used in its trial to 2026-12-01.", waitFor(platform.infos, "Signed in"));
+        assertEquals("Signed in with id_t...cdef from config.yml: Free plan, 45 of 100 lookups with every field "
+                + "today, resetting at 00:00 UTC.", waitFor(platform.infos, "Signed in"));
+    }
+
+    // Past them come the basics, the members an answer with no key carries.
+    @Test
+    void aFreeKeyPastTodaysLookupsWithEveryFieldGoesOnWithTheBasicsUntilTheReset() throws Exception {
+        api.answer("/api/v1/entitlement", FREE_PLAN_ENTITLEMENT.replace("\"requests\":45", "\"requests\":100"));
+        config("api-key: \"id_test_0123456789abcdef\"\n");
+        enable();
+        assertEquals("Signed in with id_t...cdef from config.yml: Free plan, today's lookups with every field are "
+                + "used, so lookups go on with Tor, relays, anycast and countries alone until 00:00 UTC.",
+                waitFor(platform.infos, "Signed in"));
     }
 
     @Test
@@ -200,7 +212,7 @@ class EngineTest {
 
     @Test
     void aKeyOutsideAsciiIsSaidSoAndLookupsGoWithoutOne() throws Exception {
-        api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP, "tor"));
+        api.answer("/" + TOR_IP, Answers.keyless(TOR_IP, "tor"));
         enable();
         Files.writeString(dir.resolve("config.yml"), "api-key: \"id_test_0123456789abcdé\"\n");
         assertEquals(List.of("the API key can't be used (the API key holds a character outside ASCII), "
@@ -227,11 +239,11 @@ class EngineTest {
 
     @Test
     void aProxySendsEachPlayerToTheServerForTheirCountryElseTheirContinent() throws Exception {
-        api.answer("/177.1.2.3", Answers.unlimited("177.1.2.3"));
-        api.answer("/181.1.2.3", Answers.unlimitedAt("181.1.2.3", Answers.LOCATION_AR, Answers.ASN_ISP));
-        api.answer("/146.70.116.130", Answers.unlimitedAt("146.70.116.130", Answers.LOCATION_AT, Answers.ASN_M247));
-        api.answer("/45.83.91.1", Answers.unlimited("45.83.91.1", "tor"));
-        api.answer("/36.110.1.2", Answers.unlimitedAt("36.110.1.2", Answers.LOCATION_UNKNOWN, Answers.ASN_ISP));
+        api.answer("/177.1.2.3", Answers.keyless("177.1.2.3"));
+        api.answer("/181.1.2.3", Answers.keylessAt("181.1.2.3", Answers.LOCATION_AR, Answers.ASN_ISP));
+        api.answer("/146.70.116.130", Answers.keylessAt("146.70.116.130", Answers.LOCATION_AT, Answers.ASN_M247));
+        api.answer("/45.83.91.1", Answers.keyless("45.83.91.1", "tor"));
+        api.answer("/36.110.1.2", Answers.keylessAt("36.110.1.2", Answers.LOCATION_UNKNOWN, Answers.ASN_ISP));
         platform.servers = Optional.of(Set.of("lobby-eu", "lobby-sa", "lobby-br", "lobby-no", "hub"));
         config("checks: {hosting: allow}\n" + ROUTING);
         enable();
@@ -260,7 +272,7 @@ class EngineTest {
 
     @Test
     void routingToAServerTheProxyLacksIsSaidAndSendsNobodyThere() throws Exception {
-        api.answer("/146.70.116.130", Answers.unlimitedAt("146.70.116.130", Answers.LOCATION_AT, Answers.ASN_M247));
+        api.answer("/146.70.116.130", Answers.keylessAt("146.70.116.130", Answers.LOCATION_AT, Answers.ASN_M247));
         platform.servers = Optional.of(Set.of("hub"));
         config("checks: {hosting: allow}\nrouting: {continents: {EU: lobby-eu}}\n");
         enable();

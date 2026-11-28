@@ -6,6 +6,7 @@ import io.internetdata.model.Asn;
 import io.internetdata.model.CarrierDetail;
 import io.internetdata.model.Entitlement;
 import io.internetdata.model.EntitlementPlan;
+import io.internetdata.model.EntitlementUsage;
 import io.internetdata.model.Location;
 import io.internetdata.model.ProxyDetail;
 import io.internetdata.model.SatelliteDetail;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -219,24 +221,29 @@ public final class Commands {
 
     /** The plan an organization with no subscription is on. */
     static final String FREE_PLAN = "free";
+    private static final DateTimeFormatter CLOCK = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT);
 
     /**
      * A plan and what is left of it, {@code <plan> plan, <used> of <quota> lookups used, renewing <date>}, the
      * plan named as the API names it, so a renamed plan, or the Data plan sold at several quotas, reads right
-     * with no update. The free plan's usage counts the lookups that carried every field, in its trial:
-     * {@code <plan> plan, <used> of <limit> lookups with every field used in its trial to <date>}. No figure
-     * is written here: each is the API's.
+     * with no update. The free plan's usage counts the UTC day's lookups with every field, until its window
+     * ends: {@code <plan> plan, <used> of <limit> lookups with every field today, resetting at <time> UTC},
+     * and once they are used, the basics until then. No figure is written here: each is the API's.
      */
     static String usage(Entitlement entitlement) {
         EntitlementPlan p = entitlement.getPlan();
         String key = p == null ? null : p.getKey();
         String plan = (p == null || p.getName() == null || p.getName().isBlank() ? "your" : p.getName()) + " plan";
-        if (FREE_PLAN.equals(key) && entitlement.getUsage() != null
-                && entitlement.getUsage().getRequests() != null && entitlement.getUsage().getQuota() != null) {
-            String free = String.format(Locale.ROOT, "%s, %,d of %,d lookups with every field used in its trial",
-                    plan, entitlement.getUsage().getRequests(), entitlement.getUsage().getQuota());
-            return entitlement.getUsage().getWindowEnd() == null ? free
-                    : free + " to " + entitlement.getUsage().getWindowEnd().toLocalDate();
+        EntitlementUsage day = entitlement.getUsage();
+        if (FREE_PLAN.equals(key) && day != null && day.getRequests() != null && day.getQuota() != null) {
+            String reset = day.getWindowEnd() == null ? ""
+                    : day.getWindowEnd().withOffsetSameInstant(ZoneOffset.UTC).format(CLOCK) + " UTC";
+            if (day.getQuota() > 0 && day.getRequests() >= day.getQuota()) {
+                return plan + ", today's lookups with every field are used, so lookups go on with Tor, relays, "
+                        + "anycast and countries alone" + (reset.isEmpty() ? "" : " until " + reset);
+            }
+            return String.format(Locale.ROOT, "%s, %,d of %,d lookups with every field today", plan,
+                    day.getRequests(), day.getQuota()) + (reset.isEmpty() ? "" : ", resetting at " + reset);
         }
         StringBuilder out = new StringBuilder(plan);
         if (entitlement.getUsage() != null) {

@@ -32,17 +32,17 @@ final class Answers {
             + "\"confidence\":\"high\",\"last_seen\":\"2026-11-13\"}";
 
     /**
-     * The free answer, with no key or past a free key's trial: the flags every plan answers, true for
+     * The basics, with no key or past a free key's full answers: the flags every plan answers, true for
      * each one named in {@code flags} (tor, relay, anycast), and where the address is and who holds it,
      * the AS with no type. The hosting, bot, carrier, satellite and service flags are a paid answer's,
-     * so it has none of them.
+     * so it has none of them. The API's has no company or abuse either, but SDK 3.0.0 requires both.
      */
-    static String unlimitedAt(String ip, String location, String asn, String... flags) {
-        return unlimitedWithAsType(ip, location, asn.replaceFirst("\"type\":\"[^\"]*\",", ""), flags);
+    static String keylessAt(String ip, String location, String asn, String... flags) {
+        return keylessWithAsType(ip, location, asn.replaceFirst("\"type\":\"[^\"]*\",", ""), flags);
     }
 
-    /** The free answer with its AS as given, type included, for a plugin that must not read it. */
-    static String unlimitedWithAsType(String ip, String location, String asn, String... flags) {
+    /** The basics with the AS as given, type included, for a plugin that must not read it. */
+    static String keylessWithAsType(String ip, String location, String asn, String... flags) {
         Set<String> on = Set.of(flags);
         return "{\"ip\":\"" + ip + "\",\"is_bogon\":false,\"is_tor\":" + on.contains("tor")
                 + ",\"is_relay\":" + on.contains("relay") + ",\"is_anycast\":" + on.contains("anycast")
@@ -51,18 +51,19 @@ final class Answers {
                 + ",\"company\":{\"name\":\"\",\"domain\":\"\"},\"hostname\":\"\",\"abuse\":{\"email\":\"\"}}";
     }
 
-    /** The free answer, from a home connection in Brazil. */
-    static String unlimited(String ip, String... flags) {
-        return unlimitedAt(ip, LOCATION_BR, ASN_ISP, flags);
+    /** The basics, from a home connection in Brazil. */
+    static String keyless(String ip, String... flags) {
+        return keylessAt(ip, LOCATION_BR, ASN_ISP, flags);
     }
 
-    /** A key on the free plan: the paid answer while its trial lasts, the free answer after. */
-    static String capped(String unlimited) {
-        return unlimited.substring(0, unlimited.length() - 1) + ",\"cap_reached\":true}";
+    /** A paid key past its organization's overage cap: the basics. */
+    static String capped(String keyless) {
+        return keyless.substring(0, keyless.length() - 1) + ",\"cap_reached\":true}";
     }
 
-    static String trial(String unlimitedOrPaid, boolean expired) {
-        return unlimitedOrPaid.substring(0, unlimitedOrPaid.length() - 1) + ",\"trial_expired\":" + expired + "}";
+    /** A key on the free plan: the paid answer on the day's first lookups, the basics after. */
+    static String trial(String keylessOrPaid, boolean expired) {
+        return keylessOrPaid.substring(0, keylessOrPaid.length() - 1) + ",\"trial_expired\":" + expired + "}";
     }
 
     /** A paid plan: every member, here a Mullvad exit in an M247 range also seen in a residential pool. */

@@ -23,7 +23,7 @@
 
 ## 🎁 Free to start
 
-- No account: countries, routing, Tor, privacy relays and anycast, on every join
+- No account: countries, routing, Tor, privacy relays and anycast
 - Free account, signed in with `/inetd login`: try VPNs, proxies, hosting networks, mobile networks and satellites too
 - Paid plan: every check on every join, with the provider named in your messages
 
