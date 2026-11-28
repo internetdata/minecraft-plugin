@@ -189,6 +189,8 @@ EOF
         probe "$port" alex 177.1.2.3 $mode || ok=1
     expect "an anycast connection gets in" "$admitted" "$(admitted_text "$project" na)" \
         probe "$port" sky 98.97.1.2 $mode || ok=1
+    expect "a datacenter gets in with no key" "$admitted" "$(admitted_text "$project" lobby)" \
+        probe "$port" host 146.70.116.130 $mode || ok=1
     expect "a bypassed address gets in" "$admitted" "$(admitted_text "$project" lobby)" \
         probe "$port" staff 8.8.4.4 $mode || ok=1
     expect "a private address gets in" "$admitted" "$(admitted_text "$project" lobby)" \
@@ -204,9 +206,16 @@ EOF
     fi
 
     expect_count "$dir/stub.log" "/45.83.91.1" 1 "a refused address is looked up once, then cached" || ok=1
+    expect_count "$dir/stub.log" "/146.70.116.130" 1 "a datacenter is looked up once" || ok=1
     expect_count "$dir/stub.log" "/8.8.4.4" 0 "a bypassed address is never looked up" || ok=1
     expect_count "$dir/stub.log" "/10.1.2.3" 0 "a private address is never looked up" || ok=1
     expect_count "$dir/stub.log" "/api/v1/entitlement" 0 "with no key, no plan is asked for" || ok=1
+    if grep -q "checks.hosting is block, but it needs a paid plan or a free key" "$dir/console.log"; then
+        echo "  ok   the console says hosting needs a paid plan or a free key's full answers"
+    else
+        echo "  FAIL the console never warned that hosting isn't answered with no key"
+        ok=1
+    fi
     if grep -q "internetdata-minecraft/$VERSION (" "$dir/stub.log"; then
         echo "  ok   the User-Agent names the plugin: $(cut -f2 "$dir/stub.log" | sort -u | head -1)"
     else

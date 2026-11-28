@@ -98,8 +98,7 @@ class CommandsTest {
         assertEquals("VPN not in your plan, Tor no, hosting not in your plan, proxy not in your plan, relay no",
                 said.get(1));
         assertEquals("Carrier not in your plan, satellite not in your plan, anycast yes", said.get(2));
-        assertEquals("Country Brazil (BR) in South America, network AS14593 SpaceX Services, Inc. (isp)",
-                said.get(3));
+        assertEquals("Country Brazil (BR) in South America, network AS14593 SpaceX Services, Inc.", said.get(3));
         assertEquals("A login gets: let in, and staff alerted, for anycast (SpaceX Services, Inc.)", said.get(4));
     }
 
@@ -162,7 +161,8 @@ class CommandsTest {
                 + "satellite alert, anycast alert", said.get(1));
         assertEquals("Since the server started: 0 logins checked, 0 refused, 0 flagged, 0 bypassed, 0 lookups failed.",
                 said.get(2));
-        assertEquals("No API key, so VPNs and proxies aren't checked. Run /inetd login to sign in.", said.get(3));
+        assertEquals("No API key, so VPNs, proxies, hosting networks, mobile networks and satellites aren't checked. "
+                + "Run /inetd login to sign in.", said.get(3));
     }
 
     @Test

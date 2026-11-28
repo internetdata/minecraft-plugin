@@ -12,11 +12,11 @@ import java.util.Optional;
 /**
  * The kinds of address config.yml's checks act on.
  *
- * <p>Tor, relays, mobile networks, satellites, anycast and the type of the network announcing an
- * address are on every answer, with a key or without one. VPNs, proxies and hosting by address are a
- * paid plan's, or a free account's through its trial: the SDK answers those as an empty
- * Optional when the plan leaves them out, and {@link #served} says so, so a check that never could
- * match is reported once rather than silently never firing.
+ * <p>Tor, relays and anycast are on every answer, with a key or without one. VPNs, proxies, hosting,
+ * mobile networks and satellites are a paid plan's, or a free key's full answers: the SDK answers
+ * those as an empty Optional, or reads them as false, when the answer leaves them out, and
+ * {@link #served} says so, so a check that never could match is reported once rather than silently
+ * never firing.
  */
 public enum Check {
     VPN {
@@ -45,31 +45,19 @@ public enum Check {
         }
     },
     HOSTING {
-        // Without a key the answer carries no hosting flag, but does say what kind of network
-        // announces the address, which tells a datacenter from an ISP well enough to keep bots out.
-        // The flag, which a paid answer carries, is per address and wins. A privacy relay is judged by
-        // the relay check alone: iCloud Private Relay, WARP and the company gateways run on hosting
-        // networks, and most of their addresses answer is_hosting too.
+        // A privacy relay is judged by the relay check alone: iCloud Private Relay, WARP and the company
+        // gateways run on hosting networks, and most of their addresses answer is_hosting too.
         @Override
         boolean served(Result result) {
-            return true;
+            return result.isHosting().isPresent();
         }
 
         @Override
         Optional<String> match(Result result) {
-            if (result.isRelay()) {
+            if (result.isRelay() || !result.isHosting().orElse(false)) {
                 return Optional.empty();
             }
-            if (result.isHosting().isPresent()) {
-                if (!result.isHosting().get()) {
-                    return Optional.empty();
-                }
-                return Optional.of(named("hosting", result.hosting().map(Check::provider)));
-            }
-            if (result.asn() == null || !"hosting".equalsIgnoreCase(result.asn().getType())) {
-                return Optional.empty();
-            }
-            return Optional.of(named("hosting network", network(result)));
+            return Optional.of(named("hosting", result.hosting().map(Check::provider)));
         }
     },
     PROXY {
@@ -108,9 +96,9 @@ public enum Check {
         }
     },
     CARRIER {
-        // On a paid plan or the trial. The SDK reads an absent flag as false, so the raw answer tells
-        // whether the plan carries it. The carrier's own name can be missing; the network announcing
-        // the address names it well enough then.
+        // On a paid plan or a free key's full answers. The SDK reads an absent flag as false, so the raw
+        // answer tells whether it carries it. The carrier's own name can be missing; the network
+        // announcing the address names it well enough then.
         @Override
         boolean served(Result result) {
             return result.raw().getIsCarrier() != null;
@@ -126,7 +114,7 @@ public enum Check {
         }
     },
     SATELLITE {
-        // On a paid plan or the trial, told apart as CARRIER's is.
+        // On a paid plan or a free key's full answers, told apart as CARRIER's is.
         @Override
         boolean served(Result result) {
             return result.raw().getIsSatellite() != null;

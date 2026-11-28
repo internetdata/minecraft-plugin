@@ -73,22 +73,33 @@ class GuardTest {
     void aCheckThePlanDoesNotAnswerIsReportedAndNeverMatches() throws Exception {
         api.answer("/" + TOR_IP, Answers.unlimited(TOR_IP));
         assertEquals(Action.ALLOW, check(guard("", ""), TOR_IP).action());
-        assertEquals(4, warnings.size(), warnings.toString());
+        assertEquals(5, warnings.size(), warnings.toString());
         assertTrue(warnings.get(0).startsWith("checks.vpn is block, but it needs a paid plan"), warnings.get(0));
-        assertTrue(warnings.get(1).startsWith("checks.proxy is block") && warnings.get(1).contains("/inetd login"),
-                warnings.get(1));
-        assertTrue(warnings.get(2).startsWith("checks.carrier is alert, but it needs a paid plan"), warnings.get(2));
-        assertTrue(warnings.get(3).startsWith("checks.satellite is alert, but it needs a paid plan"), warnings.get(3));
+        assertTrue(warnings.get(1).startsWith("checks.hosting is block, but it needs a paid plan"), warnings.get(1));
+        assertTrue(warnings.get(2).startsWith("checks.proxy is block") && warnings.get(2).contains("/inetd login"),
+                warnings.get(2));
+        assertTrue(warnings.get(3).startsWith("checks.carrier is alert, but it needs a paid plan"), warnings.get(3));
+        assertTrue(warnings.get(4).startsWith("checks.satellite is alert, but it needs a paid plan"), warnings.get(4));
     }
 
     @Test
-    void anAnswerWithNoKeyFindsAHostingNetworkByTheTypeOfItsAs() throws Exception {
+    void anAnswerWithNoKeyNeverHasHostingToMatch() throws Exception {
         api.answer("/" + HOSTING_IP, Answers.unlimitedAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247));
         Verdict verdict = check(guard("checks: {vpn: allow, proxy: allow, hosting: alert, carrier: allow, "
                 + "satellite: allow}", ""), HOSTING_IP);
-        assertEquals(Action.ALERT, verdict.action());
-        assertEquals("hosting network (M247 Europe SRL)", verdict.reason());
-        assertEquals(List.of(), warnings);
+        assertEquals(Action.ALLOW, verdict.action());
+        assertEquals(List.of("checks.hosting is alert, but it needs a paid plan or a free key's full answers "
+                + "(run /inetd login to get a key), so it never matches."), warnings);
+    }
+
+    @Test
+    void aNetworkTypeOnAnAnswerWithNoHostingFlagIsNotTakenForHosting() throws Exception {
+        api.answer("/" + HOSTING_IP,
+                Answers.unlimitedWithAsType(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247));
+        Verdict verdict = check(guard("checks: {vpn: allow, proxy: allow, hosting: block, carrier: allow, "
+                + "satellite: allow}", ""), HOSTING_IP);
+        assertEquals(Action.ALLOW, verdict.action());
+        assertEquals(1, warnings.size(), warnings.toString());
     }
 
     @Test
@@ -120,9 +131,10 @@ class GuardTest {
         assertEquals(Action.ALERT, verdict.action());
         assertEquals(List.of("privacy relay (iCloud Private Relay)", "anycast (SpaceX Services, Inc.)"),
                 verdict.reasons());
-        assertEquals(List.of("checks.carrier is alert, but it needs a paid plan, which signing in lets you try "
-                + "(run /inetd login), so it never matches.", "checks.satellite is alert, but it needs a paid plan, "
-                + "which signing in lets you try (run /inetd login), so it never matches."), warnings);
+        String needs = " but it needs a paid plan or a free key's full answers (run /inetd login to get a key), "
+                + "so it never matches.";
+        assertEquals(List.of("checks.hosting is block," + needs, "checks.carrier is alert," + needs,
+                "checks.satellite is alert," + needs), warnings);
     }
 
     @Test
@@ -140,15 +152,17 @@ class GuardTest {
     }
 
     @Test
-    void aFreePlanKeyPastItsDailyTrialIsAnsweredAsUnlimitedAndSaysWhatItLacks() throws Exception {
+    void aFreeKeyPastItsTrialIsAnsweredWithoutHostingAndSaysWhatItLacks() throws Exception {
         api.answer("/" + HOSTING_IP,
                 Answers.trial(Answers.unlimitedAt(HOSTING_IP, Answers.LOCATION_AT, Answers.ASN_M247), true));
         Verdict verdict = check(guard("api-key: \"id_test_0123456789abcdef\"\nchecks: {hosting: block}", ""),
                 HOSTING_IP);
-        assertEquals(Action.BLOCK, verdict.action());
-        assertEquals("hosting network (M247 Europe SRL)", verdict.reason());
-        assertTrue(warnings.stream().anyMatch(w -> w.startsWith("checks.vpn is block") && w.contains("free plan")),
+        assertEquals(Action.ALLOW, verdict.action());
+        assertTrue(warnings.stream().anyMatch(w -> w.startsWith("checks.hosting is block")
+                && w.contains("your key's answer doesn't carry it") && w.contains("a free key's full answers")),
                 warnings.toString());
+        assertTrue(warnings.stream().anyMatch(w -> w.startsWith("checks.vpn is block")
+                && w.contains("a free key's full answers")), warnings.toString());
     }
 
     @Test

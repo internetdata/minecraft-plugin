@@ -138,7 +138,8 @@ public final class Commands {
                 + engine.bypassed.get() + " &7bypassed, &f" + engine.failed.get() + " &7lookups failed"
                 + (state.settings().routes() ? ", &f" + engine.routed.get() + " &7routed." : "."));
         if (state.apiKey() == null) {
-            say(sender, "&7No API key, so VPNs and proxies aren't checked. Run &f/inetd login &7to sign in.");
+            say(sender, "&7No API key, so VPNs, proxies, hosting networks, mobile networks and satellites "
+                    + "aren't checked. Run &f/inetd login &7to sign in.");
             return;
         }
         engine.executor().execute(() -> {
@@ -216,15 +217,15 @@ public final class Commands {
         }
     }
 
-    /** The plan an organization with no subscription is on, which the site and console call Unlimited. */
+    /** The plan an organization with no subscription is on. */
     static final String FREE_PLAN = "free";
 
     /**
      * A plan and what is left of it, {@code <plan> plan, <used> of <quota> lookups used, renewing <date>}, the
      * plan named as the API names it, so a renamed plan, or the Data plan sold at several quotas, reads right
-     * with no update. The free plan, Unlimited, answers every lookup with no cap, and with every field through
-     * its trial, which is what its usage counts: {@code Unlimited plan, <used> of <limit> lookups with every
-     * field used in its trial to <date>}. No figure is written here: each is the API's.
+     * with no update. The free plan's usage counts the lookups that carried every field, in its trial:
+     * {@code <plan> plan, <used> of <limit> lookups with every field used in its trial to <date>}. No figure
+     * is written here: each is the API's.
      */
     static String usage(Entitlement entitlement) {
         EntitlementPlan p = entitlement.getPlan();

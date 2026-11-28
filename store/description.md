@@ -10,7 +10,7 @@
 ## ⚡ Up in a minute
 
 1. Put the jar in your server's `plugins` folder and restart
-2. Tor and hosting networks are blocked from the first join, with no account
+2. Tor is blocked from the first join, with no account
 3. On a network, install it on the proxy alone: Velocity or BungeeCord sees each player once
 
 ## 🔧 You decide what happens
@@ -23,8 +23,8 @@
 
 ## 🎁 Free to start
 
-- No account: countries, routing, Tor, hosting networks, privacy relays and anycast, on every join
-- Free account, signed in with `/inetd login`: try VPNs, proxies, mobile networks and satellites too
+- No account: countries, routing, Tor, privacy relays and anycast, on every join
+- Free account, signed in with `/inetd login`: try VPNs, proxies, hosting networks, mobile networks and satellites too
 - Paid plan: every check on every join, with the provider named in your messages
 
 ## 🚀 Built for busy servers

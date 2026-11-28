@@ -21,7 +21,7 @@ public final class StubApi {
     private static final String LOCATION = "{\"continent\":\"%s\",\"continent_name\":\"%s\",\"country\":\"%s\","
             + "\"country_name\":\"%s\",\"timezone\":\"\",\"currency_code\":\"\",\"currency_name\":\"\","
             + "\"currency_symbol\":\"\",\"flag_emoji\":\"\",\"flag_unicode\":\"\"}";
-    private static final String ASN = "{\"asn\":%d,\"name\":\"%s\",\"domain\":\"\",\"type\":\"%s\",\"prefix\":\"%s\","
+    private static final String ASN = "{\"asn\":%d,\"name\":\"%s\",\"domain\":\"\",\"prefix\":\"%s\","
             + "\"country\":\"\",\"rpki_status\":\"valid\"}";
     private static final String TOR = "{\"provider\":\"\",\"provider_name\":\"\",\"confidence\":\"high\","
             + "\"last_seen\":\"2026-11-13\"}";
@@ -29,24 +29,28 @@ public final class StubApi {
     private static final Map<String, String> ANSWERS = Map.of(
             // A Tor exit.
             "/45.83.91.1", answer("45.83.91.1", "tor", String.format(LOCATION, "EU", "Europe", "DE", "Germany"),
-                    String.format(ASN, 208323, "Foundation for Applied Privacy", "hosting", "45.83.91.0/24")),
+                    String.format(ASN, 208323, "Foundation for Applied Privacy", "45.83.91.0/24")),
             // A home connection in Brazil, which no routing names.
             "/177.1.2.3", answer("177.1.2.3", "", String.format(LOCATION, "SA", "South America", "BR", "Brazil"),
-                    String.format(ASN, 28573, "Claro NXT", "isp", "177.0.0.0/14")),
+                    String.format(ASN, 28573, "Claro NXT", "177.0.0.0/14")),
             // A home connection in Germany, which routing sends to the eu server.
             "/84.128.1.2", answer("84.128.1.2", "", String.format(LOCATION, "EU", "Europe", "DE", "Germany"),
-                    String.format(ASN, 3320, "Deutsche Telekom AG", "isp", "84.128.0.0/10")),
+                    String.format(ASN, 3320, "Deutsche Telekom AG", "84.128.0.0/10")),
             // Starlink in the United States: flagged to staff, and sent to the na server.
             "/98.97.1.2", answer("98.97.1.2", "anycast",
                     String.format(LOCATION, "NA", "North America", "US", "United States"),
-                    String.format(ASN, 14593, "SpaceX Services, Inc.", "isp", "98.97.0.0/16")),
+                    String.format(ASN, 14593, "SpaceX Services, Inc.", "98.97.0.0/16")),
             // A home connection in a country the run's config.yml refuses.
             "/36.110.1.2", answer("36.110.1.2", "", String.format(LOCATION, "AS", "Asia", "CN", "China"),
-                    String.format(ASN, 4847, "China Networks Inter-Exchange", "isp", "36.110.0.0/16")),
+                    String.format(ASN, 4847, "China Networks Inter-Exchange", "36.110.0.0/16")),
+            // A datacenter in Australia, which no routing names. With no key nothing says it is one.
+            "/146.70.116.130", answer("146.70.116.130", "",
+                    String.format(LOCATION, "OC", "Oceania", "AU", "Australia"),
+                    String.format(ASN, 9009, "M247 Europe SRL", "146.70.116.0/24")),
             // A Tor exit that bypass.txt lists, so it must never be asked about.
             "/8.8.4.4", answer("8.8.4.4", "tor",
                     String.format(LOCATION, "NA", "North America", "US", "United States"),
-                    String.format(ASN, 15169, "Google LLC", "hosting", "8.8.4.0/24")));
+                    String.format(ASN, 15169, "Google LLC", "8.8.4.0/24")));
 
     public static void main(String[] args) throws IOException {
         int port = Integer.parseInt(args[0]);
@@ -72,8 +76,8 @@ public final class StubApi {
         System.out.println("listening on " + port);
     }
 
-    // An answer with no key: the flags every plan carries, the one named true. The bot, carrier,
-    // satellite and service flags are a paid answer's, so it has none of them.
+    // An answer with no key: the flags every plan carries, the one named true, and an AS with no type.
+    // The hosting, bot, carrier, satellite and service flags are a paid answer's, so it has none of them.
     private static String answer(String ip, String flag, String location, String asn) {
         return "{\"ip\":\"" + ip + "\",\"is_bogon\":false,\"is_tor\":" + flag.equals("tor")
                 + ",\"is_relay\":false,\"is_anycast\":" + flag.equals("anycast") + ","

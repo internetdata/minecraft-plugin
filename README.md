@@ -11,7 +11,7 @@ It checks each player's address as they join, refuses or flags to your staff the
 
 Download `InternetData-<version>.jar` from the [latest release](https://github.com/internetdata/minecraft-plugin/releases/latest) and put it in your server's `plugins` folder, then restart. On a network, install it on the proxy alone: Velocity or BungeeCord sees each player once, before any server behind it does.
 
-The plugin works without an account on Unlimited, InternetData's free plan: countries, routing, Tor, privacy relays, anycast and hosting networks. VPNs, proxies, mobile networks and satellites need a paid plan, and a server signed in to a free account tries them. To sign in, run this from the console:
+The plugin needs no account to try. Without one it checks countries, routing, Tor, privacy relays and anycast. VPNs, proxies, hosting networks, mobile networks and satellites need a paid plan or a free key's full answers, which a server gets by signing in to a free account. To sign in, run this from the console:
 
 ```console
 /inetd login
@@ -27,16 +27,16 @@ It runs on Java 17 or newer: Paper, Spigot, Purpur, Folia and other Bukkit serve
 
 | Check | Matches | Needs | Default |
 |---|---|---|---|
-| `vpn` | Commercial VPN servers | a paid plan | `block` |
+| `vpn` | Commercial VPN servers | a paid plan or a free key's full answers | `block` |
 | `tor` | Tor relays | nothing | `block` |
-| `hosting` | Datacenters and cloud providers | nothing | `block` |
-| `proxy` | Residential, datacenter, mobile and public proxies | a paid plan | `block` |
+| `hosting` | Datacenters and cloud providers | a paid plan or a free key's full answers | `block` |
+| `proxy` | Residential, datacenter, mobile and public proxies | a paid plan or a free key's full answers | `block` |
 | `relay` | Privacy relays and company web gateways, like iCloud Private Relay | nothing | `alert` |
-| `carrier` | Mobile networks, whose addresses many players share | a paid plan | `alert` |
-| `satellite` | Satellite internet, like Starlink | a paid plan | `alert` |
+| `carrier` | Mobile networks, whose addresses many players share | a paid plan or a free key's full answers | `alert` |
+| `satellite` | Satellite internet, like Starlink | a paid plan or a free key's full answers | `alert` |
 | `anycast` | Anycast addresses, which many places announce at once | nothing | `alert` |
 
-Without a paid plan, `hosting` goes by the kind of network announcing the address; a paid plan answers it for each address and names the VPN, hosting or proxy provider in your messages. A privacy relay is judged by `relay` alone, even where it runs on a hosting network, so iCloud Private Relay and WARP users are flagged to staff rather than refused. A check your plan doesn't answer is skipped, and the console says so once. The [pricing page](https://internetdata.io/pricing) says what each plan answers.
+A paid plan, or a free key's full answers, names the VPN, hosting or proxy provider in your messages. A privacy relay is judged by `relay` alone, even where it runs on a hosting network, so iCloud Private Relay and WARP users are flagged to staff rather than refused. A check your plan doesn't answer is skipped, and the console says so once. The [pricing page](https://internetdata.io/pricing) says what each plan answers.
 
 Countries need no key. List the two-letter codes to refuse in `countries.block`, or the only ones to let in in `countries.allow`:
 
@@ -86,7 +86,7 @@ rules:
         provider: nordvpn
 ```
 
-The fields are those of a [lookup](https://docs.internetdata.io/api/lookup/lookupIp), under the same names. A field set to `false` is ignored, so a rule says what to act on, never what to let through. A rule naming a field your plan doesn't answer, like `vpn` without a paid plan, never matches, and the console says so once.
+The fields are those of a [lookup](https://docs.internetdata.io/api/lookup/lookupIp), under the same names. A field set to `false` is ignored, so a rule says what to act on, never what to let through. A rule naming a field your plan doesn't answer, like `vpn` without a paid plan or a free key's full answers, never matches, and the console says so once.
 
 ## Commands
 

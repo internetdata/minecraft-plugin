@@ -4,9 +4,9 @@
 # Guide: https://docs.internetdata.io/integrations/minecraft
 
 # Your API key. Run /inetd login to sign in and have it filled in for you, or paste one from
-# https://app.internetdata.io. Without a key, countries, routing and every check below but vpn, proxy,
-# carrier and satellite work, and hosting goes by the network an address belongs to. Signed in, a server tries every
-# check, and a paid plan answers them all on every login.
+# https://app.internetdata.io. Without a key, countries, routing, Tor, relays and anycast work; vpn,
+# hosting, proxy, carrier and satellite need a paid plan or a free key's full answers. Signed in, a
+# server tries every check, and a paid plan answers them all on every login.
 api-key: ""
 
 # What happens when a joining player's address is one of these:
@@ -14,23 +14,23 @@ api-key: ""
 #   alert   let them in, and tell staff who hold internetdata.alerts
 #   allow   do nothing
 checks:
-  # Commercial VPN servers. Needs a paid plan, or a signed-in server's trial.
+  # Commercial VPN servers. Needs a paid plan, or a free key's full answers.
   vpn: block
   # Tor relays.
   tor: block
-  # Datacenters and cloud providers, where bots and self-hosted VPNs run. Without a paid plan, judged
-  # by the network an address belongs to; with one, address by address.
+  # Datacenters and cloud providers, where bots and self-hosted VPNs run. Needs a paid plan, or a
+  # free key's full answers.
   hosting: block
-  # Residential, datacenter, mobile and public proxies. Needs a paid plan, or a signed-in server's
-  # trial.
+  # Residential, datacenter, mobile and public proxies. Needs a paid plan, or a free key's full
+  # answers.
   proxy: block
   # Privacy relays and company web gateways, like iCloud Private Relay.
   relay: alert
   # Mobile networks, whose addresses many players share and swap, so a ban on one misses. Needs a
-  # paid plan, or a signed-in server's trial.
+  # paid plan, or a free key's full answers.
   carrier: alert
-  # Satellite internet, like Starlink, whose addresses are shared too. Needs a paid plan, or a
-  # signed-in server's trial.
+  # Satellite internet, like Starlink, whose addresses are shared too. Needs a paid plan, or a free
+  # key's full answers.
   satellite: alert
   # Anycast addresses, which many places announce at once, so no one player's home is behind one.
   anycast: alert

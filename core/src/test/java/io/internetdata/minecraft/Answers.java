@@ -32,11 +32,17 @@ final class Answers {
             + "\"confidence\":\"high\",\"last_seen\":\"2026-11-13\"}";
 
     /**
-     * Unlimited, with no key or past a free key's daily trial: the flags every plan answers, true for
-     * each one named in {@code flags} (tor, relay, anycast), and where the address is and who holds it.
-     * The bot, carrier, satellite and service flags are a paid answer's, so it has none of them.
+     * The free answer, with no key or past a free key's trial: the flags every plan answers, true for
+     * each one named in {@code flags} (tor, relay, anycast), and where the address is and who holds it,
+     * the AS with no type. The hosting, bot, carrier, satellite and service flags are a paid answer's,
+     * so it has none of them.
      */
     static String unlimitedAt(String ip, String location, String asn, String... flags) {
+        return unlimitedWithAsType(ip, location, asn.replaceFirst("\"type\":\"[^\"]*\",", ""), flags);
+    }
+
+    /** The free answer with its AS as given, type included, for a plugin that must not read it. */
+    static String unlimitedWithAsType(String ip, String location, String asn, String... flags) {
         Set<String> on = Set.of(flags);
         return "{\"ip\":\"" + ip + "\",\"is_bogon\":false,\"is_tor\":" + on.contains("tor")
                 + ",\"is_relay\":" + on.contains("relay") + ",\"is_anycast\":" + on.contains("anycast")
@@ -45,12 +51,12 @@ final class Answers {
                 + ",\"company\":{\"name\":\"\",\"domain\":\"\"},\"hostname\":\"\",\"abuse\":{\"email\":\"\"}}";
     }
 
-    /** Unlimited, from a home connection in Brazil. */
+    /** The free answer, from a home connection in Brazil. */
     static String unlimited(String ip, String... flags) {
         return unlimitedAt(ip, LOCATION_BR, ASN_ISP, flags);
     }
 
-    /** A key on the free plan: the paid answer while its trial lasts, Unlimited's after. */
+    /** A key on the free plan: the paid answer while its trial lasts, the free answer after. */
     static String capped(String unlimited) {
         return unlimited.substring(0, unlimited.length() - 1) + ",\"cap_reached\":true}";
     }

@@ -336,8 +336,8 @@ public final class Engine {
     // left, so a wrong key is found before the first player is let in unchecked.
     private void checkKey(State current) {
         if (current.apiKey() == null) {
-            platform.info("No API key, so VPNs and proxies aren't checked, and hosting goes by the network an "
-                    + "address belongs to. Run /inetd login to sign in and try them; a paid plan checks them on "
+            platform.info("No API key, so VPNs, proxies, hosting networks, mobile networks and satellites "
+                    + "aren't checked. Run /inetd login to sign in and try them; a paid plan checks them on "
                     + "every login.");
             return;
         }

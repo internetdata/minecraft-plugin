@@ -25,7 +25,7 @@ class EngineTest {
             + "\"apikey\":{\"id\":\"10c2b437-3aa2-4a63-bd17-8e7c8c7f0def\",\"expires\":null,\"allowed_cidrs\":[]},"
             + "\"plan\":{\"key\":\"starter\",\"tier\":\"starter\",\"name\":\"Starter\"},\"usage\":{\"requests\":545,\"quota\":250000,"
             + "\"hard_limit\":null,\"window_start\":\"2026-11-01T00:00:00Z\",\"window_end\":\"2026-12-01T00:00:00Z\"}}";
-    // An organization on the free plan, Unlimited: its usage counts the UTC day's lookups with every field.
+    // An organization on the free plan, as the API names it: its usage counts the day's lookups with every field.
     private static final String FREE_PLAN_ENTITLEMENT = "{\"org_id\":\"f32191d0-ef02-450e-a505-eb5814c35cab\","
             + "\"apikey\":{\"id\":\"10c2b437-3aa2-4a63-bd17-8e7c8c7f0def\",\"expires\":null,\"allowed_cidrs\":[]},"
             + "\"plan\":{\"key\":\"free\",\"tier\":\"free\",\"name\":\"Unlimited\"},\"usage\":{\"requests\":45,\"quota\":100,"
@@ -76,7 +76,7 @@ class EngineTest {
         assertTrue(Files.readString(dir.resolve("bypass.txt")).startsWith("# Players and addresses"));
         assertEquals("InternetData " + engine.version() + " on Fake 1.0: vpn block, tor block, hosting block, "
                 + "proxy block, relay alert, carrier alert, satellite alert, anycast alert", platform.infos.get(0));
-        assertTrue(platform.infos.stream().anyMatch(i -> i.startsWith("No API key, so VPNs and proxies")),
+        assertTrue(platform.infos.stream().anyMatch(i -> i.startsWith("No API key, so VPNs, proxies, hosting networks")),
                 platform.infos.toString());
         assertEquals(List.of(), platform.warnings);
     }
@@ -172,7 +172,7 @@ class EngineTest {
     }
 
     @Test
-    void aKeyOnNoPaidPlanIsNamedUnlimited() throws Exception {
+    void aKeyOnNoPaidPlanIsNamedAsTheApiNamesIt() throws Exception {
         api.answer("/api/v1/entitlement", FREE_PLAN_ENTITLEMENT);
         config("api-key: \"id_test_0123456789abcdef\"\n");
         enable();

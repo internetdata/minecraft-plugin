@@ -131,8 +131,8 @@ final class Guard {
     // Why a check's answer is missing, as config.yml's comments put it.
     private String needs() {
         return settings.apiKey == null
-                ? "it needs a paid plan, which signing in lets you try (run /inetd login)"
-                : "the free plan answers it only while its trial lasts";
+                ? "it needs a paid plan or a free key's full answers (run /inetd login to get a key)"
+                : "your key's answer doesn't carry it, and it needs a paid plan or a free key's full answers";
     }
 
     /** The reasons for each action seen, to report the strongest action's. */
