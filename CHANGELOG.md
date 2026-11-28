@@ -2,6 +2,13 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff.
 
+## 1.0.8 - 2026-11-28
+
+### Fixes
+
+- Check hosting on a paid plan or a free key's full answers ([`aacaea2`](https://github.com/internetdata/minecraft-plugin/commit/aacaea2f8cd55afd8df79f8a42d36aa6b81ae31a))
+  - Hosting networks are checked on a paid plan or a free key's full answers, with a warning otherwise. With no key the plugin no longer guesses hosting from the type of network, and `/inetd check` says hosting isn't in the plan.
+
 ## 1.0.7 - 2026-11-27
 
 ### Fixes
